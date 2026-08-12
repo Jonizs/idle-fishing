@@ -8,3 +8,6 @@ desktop.ini
 # Nothing here needs installing, so there is no dependency folder to ignore.
 # Scratch output from the balance tools, if it is ever written to a file.
 *.log
+
+# Personal Claude Code settings, not shared
+.claude/settings.local.json
