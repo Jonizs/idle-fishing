@@ -1,0 +1,251 @@
+  .inv--half { flex: 1 1 0; min-height: 56px; max-height: 148px; }
+  .eq {
+    flex: none;
+    display: flex;
+    gap: 5px;
+    padding: 0 12px 12px;
+  }
+  .eq__cell {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+  .eqslot {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: var(--bark-d);
+    border: 2px dashed var(--bark-l);
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(242,227,208,.34);
+  }
+  .eqslot__icon { width: 66%; height: 66%; }
+  .eqslot { font: inherit; padding: 0; cursor: default; position: relative; }
+  .eqslot--full { border-style: solid; cursor: pointer; }
+  .eqslot--full:hover { border-color: var(--ember); }
+  .eqslot .slot__icon { width: 70%; height: auto; }
+  .eqslot .slot__n { position: absolute; right: 2px; bottom: 1px; font-size: 8px; color: var(--cream);
+                     text-shadow: 0 1px 2px #2e130d, 0 0 3px #2e130d; }
+  .slot__t {
+    position: absolute; left: 3px; top: 2px;
+    font-size: 8px; color: var(--cream);
+    text-shadow: 0 1px 2px #2e130d, 0 0 3px #2e130d;
+  }
+  .slot--glow {
+    border-color: #fff;
+    background: radial-gradient(circle at 50% 45%, rgba(255,255,255,.28), var(--bark-d) 72%);
+    box-shadow: 0 0 9px rgba(255,255,255,.45);
+  }
+  .slot--glow .slot__icon { filter: drop-shadow(0 0 4px rgba(255,255,255,.95)); }
+  .eq__lbl { font-size: 8px; color: rgba(242,227,208,.55); }
+
+  /* ── Sell dialog ─────────────────────────────────────────────────────── */
+  .sell__quick { display: flex; gap: 5px; margin-top: 10px; }
+  .sell__quick button {
+    flex: 1 1 0;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    font-size: 11px;
+    padding: 9px 2px;
+    color: var(--cream);
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .sell__quick button:hover { background: var(--bark-l); }
+  .sell__total {
+    margin-top: 13px;
+    font-size: 13px;
+    color: var(--silver);
+  }
+  .sell__row { display: flex; gap: 8px; margin-top: 12px; }
+  .sell__row button {
+    flex: 1 1 0;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    font-size: 13px;
+    padding: 12px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 2px solid var(--bark-l);
+    background: var(--bark-d);
+    color: var(--cream);
+  }
+  .sell__row #sell-go {
+    background: var(--ember);
+    border-color: var(--ember);
+    color: var(--bark-dd);
+  }
+  .sell__row #sell-go:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Upgrades ────────────────────────────────────────────────────────── */
+  .up {
+    position: relative;
+    flex: none;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    color: var(--cream);
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    padding: 10px 11px 24px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .up:hover:not(:disabled) { background: var(--bark-l); }
+  .up:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  .up:disabled { cursor: not-allowed; }
+  .up--locked { opacity: .42; }
+  .up--poor   { opacity: .62; }
+  .up--maxed  { opacity: .72; border-color: var(--ember); }
+
+  .up__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .up__name { font-size: 13px; }
+  .up__tier { font-size: 10px; color: var(--ember); white-space: nowrap; }
+  .up__desc {
+    display: block;
+    margin-top: 6px;
+    font-size: 10px;
+    line-height: 1.45;
+    color: rgba(242,227,208,.62);
+  }
+  .up__cost {
+    position: absolute;
+    right: 10px;
+    bottom: 6px;
+    font-size: 10px;
+    color: var(--silver);
+  }
+
+  .slot--ench {
+    border-color: #e5bb4e;
+    background: radial-gradient(circle at 50% 45%, rgba(229,187,78,.26), var(--bark-d) 72%);
+  }
+  .slot--ench .slot__icon { filter: drop-shadow(0 0 3px rgba(229,187,78,.9)); }
+  .slot--ench:hover { border-color: #fbe08a; }
+  /* A real border, not a background trick. `.slot.slot--mut` outranks every
+     earlier rule, the flat colour always paints, and border-image only layers
+     the metal on top where supported — so the worst case is a plain silver
+     border rather than no border at all. */
+  /* Struck: electric blue frame with a glow inside and out, after the
+     reference. Same real-border approach as the mutated frame. */
+  .slot.slot--struck {
+    border: 3px solid #63b6ff;
+    border-image: linear-gradient(135deg,
+      #cfeaff 0%, #4aa3ff 18%, #eaf6ff 34%, #2f7fe0 50%,
+      #eaf6ff 66%, #4aa3ff 82%, #cfeaff 100%) 1 stretch;
+    background: radial-gradient(circle at 50% 45%, rgba(110,180,255,.34), var(--bark-d) 72%);
+    box-shadow: 0 0 0 1px rgba(20,9,6,.55), 0 0 10px rgba(106,168,255,.75),
+                inset 0 0 8px rgba(150,205,255,.45);
+  }
+  .slot.slot--struck:hover {
+    background: radial-gradient(circle at 50% 45%, rgba(140,200,255,.5), var(--bark-d) 74%);
+  }
+  .slot--struck .slot__icon { filter: drop-shadow(0 0 4px rgba(150,205,255,.95)); }
+  /* A struck fish that is also mutated keeps the silver frame and takes the
+     lightning as an inner ring, so the two states stay legible together. */
+  .slot.slot--struck.slot--mut {
+    border-color: #cbd3dd;
+    border-image: var(--chrome) 1 stretch;
+    box-shadow: var(--chrome-edge), inset 0 0 0 2px rgba(106,168,255,.9),
+                inset 0 0 9px rgba(150,205,255,.5);
+  }
+
+  .slot.slot--mut {
+    border: 3px solid #cbd3dd;
+    border-image: var(--chrome) 1 stretch;
+    background: var(--bark-d);
+    box-shadow: var(--chrome-edge);
+  }
+  .slot.slot--mut:hover { background: rgba(224,160,84,.16); }
+  /* Enchanted keeps its gold wash inside the silver frame. */
+  .slot.slot--mut.slot--ench {
+    background: radial-gradient(circle at 50% 45%, rgba(229,187,78,.34), var(--bark-d) 72%);
+  }
+  .slot.slot--mut.slot--ench:hover {
+    background: radial-gradient(circle at 50% 45%, rgba(229,187,78,.48), var(--bark-d) 74%);
+  }
+
+  #gate, #sell, #crate-dlg {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(20,9,6,.88);
+    backdrop-filter: blur(3px);
+  }
+  #gate[hidden], #sell[hidden], #crate-dlg[hidden] { display: none; }
+
+  .gate__box {
+    width: min(340px, calc(100vw - 40px));
+    padding: 26px 24px 22px;
+    background: var(--bark);
+    border: 3px solid var(--bark-l);
+    border-radius: 5px;
+    box-shadow: 0 18px 46px rgba(0,0,0,.6);
+    text-align: center;
+  }
+  .gate__title { font-size: 17px; color: var(--ember); }
+  .gate__sub { margin-top: 9px; font-size: 11px; color: rgba(242,227,208,.5); min-height: 15px; }
+  #gate-input, #sell-amt {
+    width: 100%;
+    margin-top: 18px;
+    padding: 12px 11px;
+    font: inherit;
+    font-size: 15px;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    text-align: center;
+    color: var(--cream);
+    background: var(--bark-dd);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+  }
+  #gate-input:focus, #sell-amt:focus { outline: none; border-color: var(--ember); }
+  #gate-go {
+    width: 100%;
+    margin-top: 12px;
+    padding: 12px;
+    font: inherit;
+    font-size: 14px;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    color: var(--bark-dd);
+    background: var(--ember);
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  #gate-go:hover   { filter: brightness(1.08); }
+  #gate-go:active  { transform: translateY(1px); }
+  #gate-go:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+  @media (max-width: 860px) {
+    :root { --panel-l: 178px; --panel-r: 274px; }
+    .ident__name { font-size: 13px; }
+    .bar { font-size: 11px; padding: 9px 9px; }
+    .panel--right .bars { gap: 5px; padding: 8px; }
+    .panel--right .bar { padding: 9px 3px; font-size: 10px; }
+  }
+
+  /* ── Phone layout ────────────────────────────────────────────────────────
+
+     Panels leave the flow and become drawers, so the scene gets the whole
+     screen and --panel-l / --panel-r go to 0 for the layout maths. */

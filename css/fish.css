@@ -1,0 +1,239 @@
+  .fish {
+    position: relative;
+    flex: none;
+    overflow: hidden;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    color: var(--cream);
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    padding: 10px 11px 21px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .fish:hover:not(:disabled) { background: var(--bark-l); }
+  .fish.fish--mut[aria-pressed="true"] {
+    box-shadow: var(--chrome-edge), inset 0 0 0 2px rgba(224,160,84,.85);
+  }
+  .fish:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  .fish[aria-pressed="true"] { border-color: var(--ember); }
+  .fish--locked { opacity: .42; cursor: not-allowed; }
+
+  .fish__fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: rgba(224,160,84,.2);
+    border-right: 1px solid rgba(224,160,84,.5);
+    pointer-events: none;
+  }
+  .fish__top {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .pondtab {
+    flex: none;
+    height: 172px;
+    display: flex;
+    flex-direction: column;
+    color: var(--cream);
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    padding: 8px;
+  }
+  /* Tabs holding upgrade slots grow to fit rather than clipping them. */
+  .pondtab--breed,
+  .pondtab[data-pane] { height: auto; min-height: 172px; }
+
+  .pondtab--locked { opacity: .42; }
+
+  .pondtab__name {
+    flex: none;
+    font-size: 13px;
+    margin-bottom: 7px;
+  }
+  .pondtab__lvl {
+    font-size: 11px;
+    color: var(--ember);
+    margin-left: 6px;
+    white-space: nowrap;
+  }
+  /* auto-fit collapses to one column when the panel is too narrow for two,
+     so nothing has to be re-tuned when --panel-r changes. */
+  .pondtab__slots {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+    gap: 8px;
+  }
+  /* Rows size to content: a two-line fish name plus its level or price is
+     taller than a fixed row, and the overflow escaped the tile. */
+  .pondtab__slots--breed {
+    grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+    grid-auto-rows: minmax(52px, auto);
+  }
+  .pondslot {
+    background: var(--bark-dd);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+  }
+  /* Mutated fish read silver. The border is brushed metal rather than a flat
+     colour: two stacked backgrounds, the inner one clipped to the padding box
+     and the outer gradient to the border box. An enchanted mutated fish keeps
+     the silver frame and turns only the fish gold. */
+  :root {
+    --chrome: linear-gradient(135deg,
+      #fdfdfe 0%, #aab0b8 14%, #f2f4f6 27%, #7d848c 41%,
+      #e8ebee 52%, #7d848c 63%, #f2f4f6 77%, #aab0b8 88%, #fdfdfe 100%);
+    --chrome-edge: 0 0 0 1px rgba(20,9,6,.55), 0 0 7px rgba(214,220,228,.28);
+  }
+
+  .fish.fish--mut,
+  .pondslot.pondslot--mutated {
+    border: 3px solid #cbd3dd;
+    border-image: var(--chrome) 1 stretch;
+    box-shadow: var(--chrome-edge);
+    background: linear-gradient(180deg, rgba(203,211,221,.15), rgba(203,211,221,.04)), var(--bark-d);
+  }
+  .fish.fish--mut:hover:not(:disabled) {
+    background: linear-gradient(180deg, rgba(203,211,221,.24), rgba(203,211,221,.10)), var(--bark-l);
+  }
+
+  /* Four-point studs on the left and right edges, echoing the banner ends. */
+  .fish--mut::before, .fish--mut::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--chrome);
+    clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%,
+                       50% 100%, 39% 61%, 0% 50%, 39% 39%);
+    pointer-events: none;
+    z-index: 2;
+  }
+  /* The fish row clips overflow, so its studs sit just inside the frame. */
+  .fish--mut { padding-left: 17px; padding-right: 17px; }
+  .fish--mut::before, .fish--mut::after { width: 10px; height: 20px; }
+  .fish--mut::before { left: -3px; }
+  .fish--mut::after  { right: -3px; }
+  .pondslot--breed {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 3px;
+    min-width: 0;
+    padding-bottom: 2px;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    color: var(--cream);
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .pondslot--breed:hover:not(:disabled) { background: var(--bark-d); }
+  .pondslot--breed:disabled { cursor: not-allowed; }
+  .pondslot--gated,
+  .pondslot--breed.pondslot--poor { opacity: .55; }
+  .pondslot--mutated { opacity: 1; }
+  .pondslot__mut {
+    display: block;
+    margin-top: auto;
+    padding: 0 6px 3px;
+    font-size: 9px;
+    color: var(--silver);
+  }
+  .pondslot--up {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    text-align: left;
+    color: var(--cream);
+    padding: 6px 7px 6px;
+    cursor: pointer;
+    transition: border-color .12s, background .12s;
+  }
+  .pondslot--up:hover:not(:disabled) { background: var(--bark-d); }
+  .pondslot--up:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+  .pondslot--up:disabled { cursor: not-allowed; }
+  .pondslot--poor  { opacity: .62; }
+  .pondslot--maxed { opacity: .72; border-color: var(--ember); }
+  /* The tier badge drops to its own line rather than squeezing the name
+     until it breaks mid-word. */
+  .pondslot__top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 5px;
+    min-width: 0;
+  }
+  .pondslot__name { font-size: 12px; overflow-wrap: normal; }
+  .pondslot__tier {
+    margin-left: auto;
+    font-size: 10px;
+    color: var(--ember);
+    white-space: nowrap;
+  }
+  .pondslot__desc {
+    display: block;
+    margin-top: 4px;
+    font-size: 10px;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    color: rgba(242,227,208,.62);
+  }
+  .pondslot__cost {
+    margin-top: auto;
+    padding-top: 5px;
+    text-align: right;
+    font-size: 10px;
+    color: var(--silver);
+  }
+  .pondslot__fish {
+    display: block;
+    padding: 5px 6px;
+    overflow-wrap: normal;
+    font-size: 10px;
+    color: rgba(242,227,208,.55);
+  }
+
+  .fish__name { font-size: 13px; }
+  .fish--mut .fish__name,
+  .fish--mut .fish__owned {
+    color: #fbfcfd;
+    text-shadow: 0 1px 2px rgba(20,9,6,.9);
+  }
+  .fish--mut .fish__stat {
+    color: #ffd79a;
+    text-shadow: 0 1px 2px rgba(20,9,6,.9);
+  }
+  .slot--mut .slot__n { text-shadow: 0 1px 2px #140906, 0 0 4px #140906; }
+  .pondslot--mutated .pondslot__fish {
+    color: #fbfcfd;
+    text-shadow: 0 1px 2px rgba(20,9,6,.9);
+  }
+  .pondslot--mutated .pondslot__mut {
+    color: #e8edf3;
+    text-shadow: 0 1px 2px rgba(20,9,6,.9);
+  }
+  .fish__stat { font-size: 10px; color: var(--ember); white-space: nowrap; }
+  .fish__owned {
+    position: absolute;
+    right: 10px;
+    bottom: 5px;
+    font-size: 10px;
+    color: rgba(242,227,208,.55);
+  }
+
+  /* ── Dev speed ───────────────────────────────────────────────────────── */

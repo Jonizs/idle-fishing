@@ -1,0 +1,58 @@
+  /* Fishing Scrolls: nine slots, three across. The slots are empty; the tab
+     itself is still gated behind the Old Fishing Scrolls upgrade. */
+
+  .scrolls {
+    flex: 0 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
+    padding: 0 12px 8px;
+  }
+
+  /* Scroll rarity reads off the slot border, matching how equipment shows it.
+     t1 Common and t6 Mythic are both white, as specified. */
+  .srar--common    { border-color: #ffffff; }
+  .srar--uncommon  { border-color: #5ad46a; box-shadow: 0 0 7px rgba(90,212,106,.4); }
+  .srar--rare      { border-color: #3a72d4; box-shadow: 0 0 7px rgba(58,114,212,.45); }
+  .srar--epic      { border-color: #8a4fd0; box-shadow: 0 0 8px rgba(138,79,208,.5); }
+  .srar--legendary { border-color: #e5bb4e; box-shadow: 0 0 9px rgba(229,187,78,.55); }
+  .srar--mythic    { border-color: #ffffff; box-shadow: 0 0 10px rgba(255,255,255,.7); }
+
+  /* The empty bar slots keep a dimmed scroll as their placeholder. */
+  #scrolls-bar .slot:disabled .slot__icon { opacity: .22; }
+
+  /* Sea raven: a black-bordered fish in the normal inventory. Outranks the
+     enchanted and struck frames the way the mutated frame does. */
+  .slot.slot--raven {
+    border: 2px solid #101010;
+    box-shadow: 0 0 7px rgba(0,0,0,.85), inset 0 0 6px rgba(0,0,0,.6);
+  }
+
+  /* Map area level locks. */
+  .map__zone--locked { cursor: not-allowed; }
+  .map__locki { pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.9)); }
+  /* Matches .map__name--map, the baked area labels. */
+  /* Area names, redrawn as live text so they render at native resolution
+     instead of being baked into the JPEG at 1440px. Same styling as the LV
+     badges. Named map__label; map__name is already taken in effects.css. */
+  .map__label {
+    font-size: 20px;
+    letter-spacing: 0;
+    text-transform: none;
+    fill: #ffffff;
+    stroke: rgba(20,28,38,.9);
+    stroke-width: 3px;
+    paint-order: stroke fill;
+    pointer-events: none;
+  }
+
+  .map__lock {
+    font-size: 20px;
+    letter-spacing: 0;
+    text-transform: none;
+    fill: #ffffff;
+    stroke: rgba(20,28,38,.9);
+    stroke-width: 3px;
+    paint-order: stroke fill;
+    pointer-events: none;
+  }

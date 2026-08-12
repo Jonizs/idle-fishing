@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(LATE_XP=1.166 node simulations/silver54.js)",
+      "Bash(sed -i \"s/^const PAY = [0-9]*, GAP = 12;/const PAY = 64, GAP = 12;/\" simulations/silver54.js)",
+      "Bash(node simulations/silver54.js)",
+      "Bash(LATE_XP=1.171 node simulations/silver54.js)",
+      "Bash(node -e ' *)",
+      "Bash(node simulations/tdz.js)",
+      "Bash(git --version)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "Bash(git init *)",
+      "Bash(git add *)",
+      "Bash(git -c user.name=jonas -c user.email=jonasskecionis@gmail.com commit -q -m ' *)"
+    ]
+  }
+}

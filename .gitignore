@@ -1,0 +1,10 @@
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Nothing here needs installing, so there is no dependency folder to ignore.
+# Scratch output from the balance tools, if it is ever written to a file.
+*.log
