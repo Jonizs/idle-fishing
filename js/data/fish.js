@@ -19,5 +19,35 @@
   ];
   FISH.forEach((f, i) => { f.idx = i + 1; });   // tier number, used by Gold Fisher
 
+  // ── Wade fishing ─────────────────────────────────────────────────────────
+  // The swamp ladder picks up where the mutated pond ladder stops. Mutated
+  // Bass is the last rung there at 2.31 xp/s and 12.2 silver/s, so Swampfish
+  // starts just above both and every rung is ~1.23x the one below it, which
+  // holds the same shape as the pond curve over seven fish instead of nine.
+  //         xp/s:  2.50  3.14  3.91  4.81  5.95  7.30  9.00
+  //     silver/s: 13.0  16.0  19.7  24.2  29.8  36.6  45.0
+  // The first three all open at 54 and pay exactly the same per second, so a
+  // player arriving with three rods can fill all of them at once and the only
+  // difference is how long each one takes to land.
+  const WADE_FISH = [
+    { id: "swampfish", name: "Swampfish",  xp: 10,  time: 4,  lvl: 54, price: 52,   col: "#6f8f4a", idx: 1 },
+    { id: "minnow",    name: "Minnow",     xp: 15,  time: 6,  lvl: 54, price: 78,   col: "#8fa96b", idx: 1 },
+    { id: "blackfish", name: "Blackfish",  xp: 22,  time: 8.8, lvl: 54, price: 114, col: "#3c4a3f", idx: 1 },
+    { id: "swampeel",  name: "Swamp Eel",  xp: 22,  time: 7,  lvl: 58, price: 112,  col: "#4a7a5c", idx: 2 },
+    { id: "snakehead", name: "Snakehead",  xp: 43,  time: 11, lvl: 62, price: 217,  col: "#8a7a3e", idx: 3 },
+    { id: "alligator", name: "Alligator",  xp: 77,  time: 16, lvl: 66, price: 387,  col: "#3f6b3a", idx: 4 },
+    { id: "catfish",   name: "Catfish",    xp: 131, time: 22, lvl: 71, price: 656,  col: "#7a6a52", idx: 5 },
+    { id: "stingray",  name: "Stingray",   xp: 197, time: 27, lvl: 76, price: 988,  col: "#5c6f7a", idx: 6 },
+    { id: "arapaima",  name: "Arapaima",   xp: 288, time: 32, lvl: 82, price: 1440, col: "#a3543f", idx: 7 },
+  ];
+  // The three starters share tier 1, so idx is set by hand here rather than
+  // taken from list position. idx is the tier: it drives Gold Fisher, the
+  // golden spawn roll, Pirate Loot and every crate chance.
+  WADE_FISH.forEach((f, i) => { if (f.idx === undefined) f.idx = i + 1; });
+
   D.FISH = FISH;
+  D.WADE_FISH = WADE_FISH;
+  // Every fish in the game, for looking one up by id without knowing where it
+  // was caught — the bag, the sell screen and the save all need that.
+  D.ALL_FISH = FISH.concat(WADE_FISH);
 })();

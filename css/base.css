@@ -17,8 +17,22 @@
     --gold:    #e5bb4e;
     --online:  #5ad46a;
 
-    --panel-l: 250px;
-    --panel-r: 415px;
+    /* The scene is the strip between these two, so trimming them is what
+       widens the playfield. */
+    --panel-l: 205px;
+    --panel-r: 340px;
+  }
+
+  /* Wade fishing swaps the whole palette from bark to swamp green. Only the
+     custom properties change, so every panel, tab, dialog and slot follows
+     without a single extra rule. Set by paintArea() on the root element. */
+  html.area-wade {
+    --bark:    #2f5a3a;
+    --bark-d:  #1e3d28;
+    --bark-dd: #12251a;
+    --bark-l:  #467a4e;
+    --cream:   #e2f0dc;
+    --ember:   #8fc86a;
   }
 
   * { box-sizing: border-box; }

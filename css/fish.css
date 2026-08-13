@@ -209,6 +209,9 @@
   }
 
   .fish__name { font-size: 13px; }
+  /* Tier sits beside the name, quieter than it. Wade's three starters all
+     share tier 1, so this is not just the row number. */
+  .fish__tier { margin-left: 5px; font-size: 9px; opacity: .6; }
   .fish--mut .fish__name,
   .fish--mut .fish__owned {
     color: #fbfcfd;

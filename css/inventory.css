@@ -181,7 +181,7 @@
     background: radial-gradient(circle at 50% 45%, rgba(229,187,78,.48), var(--bark-d) 74%);
   }
 
-  #gate, #sell, #crate-dlg {
+  #gate, #sell, #crate-dlg, #gear-dlg {
     position: fixed;
     inset: 0;
     z-index: 10;
@@ -191,7 +191,41 @@
     background: rgba(20,9,6,.88);
     backdrop-filter: blur(3px);
   }
-  #gate[hidden], #sell[hidden], #crate-dlg[hidden] { display: none; }
+  #gate[hidden], #sell[hidden], #crate-dlg[hidden], #gear-dlg[hidden] { display: none; }
+
+  /* Sell equipment: one row per spare stack, tap to include it in the sale. */
+  .gear__box { width: min(420px, calc(100vw - 40px)); }
+  .gear__list {
+    max-height: min(46vh, 340px);
+    overflow-y: auto;
+    margin: 10px 0 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bark-l) transparent;
+  }
+  .gear__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    color: var(--cream);
+    font: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    text-align: left;
+  }
+  .gear__row:hover { border-color: var(--ember); }
+  .gear__row--on { border-color: var(--ember); background: rgba(224,160,84,.16); }
+  .gear__row svg { width: 18px; height: 18px; flex: none; }
+  .gear__name { flex: 1 1 auto; }
+  .gear__n    { opacity: .75; }
+  .gear__gold { color: var(--gold); white-space: nowrap; }
+  .gear__empty { padding: 14px 0; text-align: center; opacity: .7; font-size: 11px; }
 
   .gate__box {
     width: min(340px, calc(100vw - 40px));

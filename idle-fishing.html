@@ -41,8 +41,9 @@
   <div class="ident">
     <div class="ident__name"><span id="player-name">—</span><span class="dot" title="Online"></span></div>
     <div class="purse">
-      <span class="coin coin--gold"></span><span id="gold">0</span>
-      <span class="coin coin--silver"></span><span id="silver">0</span>
+      <div class="purse__row"><span class="coin coin--silver"></span><span id="silver">0</span></div>
+      <div class="purse__row"><span class="coin coin--gold"></span><span id="gold">0</span></div>
+      <div class="purse__row"><span class="coin coin--gem"></span><span id="gems">0</span></div>
     </div>
     <div class="ident__level">Lv <span id="player-level">1</span></div>
     <div class="xp"><span class="xp__fill" id="xp-fill"></span></div>
@@ -59,7 +60,6 @@
       <button class="bar" role="tab" data-tab="scrolls"     aria-selected="false" disabled>Fishing Scrolls <span class="bar__soon" id="scrolls-lock">(locked)</span></button>
       <button class="bar" role="tab" data-tab="skins"       aria-selected="false">Skins <span class="bar__soon">(coming soon)</span></button>
       <button class="bar" role="tab" data-tab="leaderboard" aria-selected="false">Leaderboard <span class="bar__soon">(coming soon)</span></button>
-      <button class="bar" role="tab" data-tab="trading"     aria-selected="false">Trading <span class="bar__soon">(coming soon)</span></button>
       <button class="bar" role="tab" data-tab="party"       aria-selected="false">Party <span class="bar__soon">(coming soon)</span></button>
     </nav>
 
@@ -193,7 +193,7 @@
     <div class="inv inv--half" id="inv-equip"></div>
     <div class="inv__h">Crates</div>
     <div class="inv inv--crates" id="inv-crates"></div>
-    <button id="sell-extras">Sell extras</button>
+    <button id="sell-extras">Sell equipment</button>
   </div>
 </aside>
 
@@ -203,7 +203,10 @@
 </div>
 
 <div class="map" id="map-screen" hidden>
-  <button class="bar map__close" id="map-close">Back</button>
+  <div class="map__note">
+    <span class="map__note-h">Information</span>
+    All buffs are combined from different location upgrades and stack together.
+  </div>
   <svg class="map__art" viewBox="0 0 1440 720" preserveAspectRatio="xMidYMid slice"
        aria-label="World map">
     <image id="map-image" x="0" y="0" width="1440" height="720"
@@ -238,9 +241,11 @@
     <button class="bar" role="tab" data-tab="fish"     aria-selected="true">Fish</button>
     <button class="bar" role="tab" data-tab="upgrades" aria-selected="false">Upgrades</button>
     <button class="bar" role="tab" data-tab="pond"     aria-selected="false" disabled>Pond <span class="bar__soon" id="pond-lock">(Lv 32)</span></button>
+    <button class="bar" role="tab" data-tab="dojo"     aria-selected="false" disabled hidden>Dojo <span class="bar__soon" id="dojo-lock">(Lv 70)</span></button>
   </nav>
   <div class="pane" data-pane="fish" id="pane-fish"></div>
   <div class="pane" data-pane="upgrades" hidden></div>
+  <div class="pane" data-pane="dojo" id="pane-dojo" hidden></div>
   <div class="pane" data-pane="pond" hidden>
     <div class="pondtab" data-pane="food" data-lvl="32">
       <div class="pondtab__name">Fish Food<span class="pondtab__lvl"></span></div>
@@ -273,6 +278,7 @@
     <button id="dev-storm">Storm</button>
     <button id="dev-thunder">Thunder set</button>
     <button id="dev-max">MAX</button>
+    <button id="dev-lvl">+1</button>
     <button id="dev-reset">Reset</button>
   </div>
   <button id="dev-toggle">Dev</button>
@@ -293,6 +299,20 @@
     <div class="sell__row">
       <button id="sell-cancel">Cancel</button>
       <button id="sell-go">Sell</button>
+    </div>
+  </div>
+</div>
+
+<div id="gear-dlg" hidden>
+  <div class="gate__box gear__box">
+    <div class="gate__title">Sell equipment</div>
+    <div class="gate__sub" id="gear-sub">Tap a stack to include it</div>
+    <div class="gear__list" id="gear-list"></div>
+    <div class="sell__total" id="gear-total">0 Gold</div>
+    <div class="sell__row">
+      <button id="gear-cancel">Cancel</button>
+      <button id="gear-all">Sell all</button>
+      <button id="gear-go">Sell selected</button>
     </div>
   </div>
 </div>
@@ -327,6 +347,7 @@
 
 <script src="js/data/map.js"></script>
 <script src="js/data/scene.js"></script>
+<script src="js/data/wade.js"></script>
 <script src="js/data/fish.js"></script>
 <script src="js/data/progression.js"></script>
 <script src="js/data/upgrades.js"></script>
@@ -374,8 +395,11 @@
   };
 
   // ── Data tables (js/data/*.js, loaded above) ────────────────────────────
-  const { FISH, EARLY_XP, LATE_FROM, LATE_XP, xpToNext, UPGRADES, splitCost, tierLvl, MUTATE, MUT, POND_UPG,
+  const { FISH, WADE_FISH, ALL_FISH, EARLY_XP, LATE_FROM, LATE_XP, xpToNext, UPGRADES, splitCost, tierLvl, MUTATE, MUT, POND_UPG,
           SCROLLS, SCROLL_RAR } = globalThis.GAME_DATA;
+  // The ladder for wherever you are standing. FISH stays the pond's own list,
+  // because the Breeder and the pond upgrades only ever apply there.
+  const areaFish = () => (state.area === "wade" ? WADE_FISH : FISH);
 
 
   const isMut = id => !!state.mutated[id];
@@ -442,7 +466,7 @@
   const silverRate = () => {
     let s = 0;
     for (const id of livePicks()) {
-      const f = FISH.find(x => x.id === id);
+      const f = ALL_FISH.find(x => x.id === id);
       if (!f) continue;
       s += priceOf(f, false) * (1 + dblChance()) * (1 + (ENCH_MULT - 1) * encChance())
            / catchTime(f);
@@ -788,12 +812,18 @@
     player: { name: "", level: 1, xp: 0, online: true },
     party: [null, null, null, null],
     tabs: { left: "profile", right: "fish" },
+    area: "pond",                // pond | wade — which location is being fished
     owned: {},
     ench: {},
     upgrades: {},
     picks: ["lanternfish"],          // one fish per rod, in rod order
+    // Each area keeps its own selection; picks is whichever is active. Swapped
+    // on travel so coming back to the pond does not lose what you had on.
+    picksBy: { pond: ["lanternfish"], wade: ["swampfish"] },
     speed: 1,
     gold: 0, silver: 0,
+    gems: 0,                     // premium currency, 1 per real hour open
+    gemSecs: 0,                  // real seconds banked toward the next one
     meals: 0,
     rods: {}, lines: {}, lures: {}, baits: {}, hats: {}, crates: {},   // "rarity:tier" -> count
     equip: { rod: "", line: "", lure: "", bait: "", hat: "" },          // "" = empty slot
@@ -802,9 +832,10 @@
   const save = () => store.write({
     player: state.player, party: state.party,
     owned: state.owned, ench: state.ench, upgrades: state.upgrades,
-    picks: state.picks,
+    picks: state.picks, picksBy: state.picksBy,
     gold: state.gold, silver: state.silver,
-    stats: state.stats, bought: state.bought, layout: state.layout,
+    gems: state.gems, gemSecs: state.gemSecs,
+    stats: state.stats, bought: state.bought, layout: state.layout, area: state.area,
     mutated: state.mutated, struck: state.struck, museum: state.museum,
     scrolls: state.scrolls, scrollEq: state.scrollEq, ravens: state.ravens,
     splitTiers: true,
@@ -851,27 +882,64 @@
   // Everything below is in the artwork's own pixel space, 2688x1536. fitScene()
   // maps it onto whatever the window is, so these numbers never change with
   // the viewport — nudge them here to move the pond or the angler.
-  const SCENE = {
-    w: 2688, h: 1536,
-    pond:  { cx: 1398, cy: 840, rx: 410, ry: 235 },  // the lower basin, as an ellipse
-    seat:  { x: 947, y: 820 },                       // rim stone at the far left
-    aim:   -0.25,                                    // rod fan, radians from +x
-    unit:  32,                                       // angler height unit at 1:1
-    fill:  "#231f1c",                                // rock tone behind the art
-    // Foam churning at the foot of each drop. w/h is the patch the blobs
-    // wander inside, in artwork pixels.
-    foam: [{ x: 1700, y: 548, w: 116, h: 34 },       // upper pool, under the drop
-           { x: 1505, y: 706, w: 132, h: 40 }],      // spill into the main basin
-    // 1 fills the strip between the panels, cropping whichever axis overflows
-    // so there is never a bar. Below 1 pulls back and shows more of the
-    // cavern; above 1 pushes in on the pond. The pond stays centred either way.
-    zoom: 1,
+  // One entry per fishable location. SCENE points at whichever is active, so
+  // every drawing routine keeps reading a single object.
+  const AREAS = {
+    pond: {
+      w: 2688, h: 1536,
+      water: { cx: 1398, cy: 840, rx: 410, ry: 235 },  // the lower basin, as an ellipse
+      seat:  { x: 947, y: 820 },                       // rim stone at the far left
+      aim:   -0.25,                                    // first rod, radians from +x
+      spread: 0.095,                                   // radians between rods
+      rodLen: 3.8,                                     // rod length in angler units
+      hand:  { x: 0.76, y: -0.88 },                    // grip, in angler units
+      unit:  32,                                       // angler height unit at 1:1
+      fill:  "#231f1c",                                // rock tone behind the art
+      // Foam churning at the foot of each drop. w/h is the patch the blobs
+      // wander inside, in artwork pixels.
+      foam: [{ x: 1700, y: 548, w: 116, h: 34 },       // upper pool, under the drop
+             { x: 1505, y: 706, w: 132, h: 40 }],      // spill into the main basin
+      // 1 fills the strip between the panels, cropping whichever axis overflows
+      // so there is never a bar. Below 1 pulls back and shows more of the
+      // cavern; above 1 pushes in on the pond. The pond stays centred either way.
+      zoom: 1,
+      src:  window.SCENE_JPEG,
+    },
+    // Wade: the swamp. Same angler and rod fan as the pond, but he stands in
+    // the channel instead of sitting on a bank, so his legs are underwater.
+    wade: {
+      w: 2720, h: 1568,
+      water: { cx: 1360, cy: 952, rx: 408, ry: 176 },   // the swamp channel
+      seat:  { x: 1500, y: 862 },                       // where he stands, waist line
+      flip:  true,                                      // face left, not right
+      // The swamp gets its own float positions rather than the pond's, spread
+      // out across the channel to his left. Fractions of the water ellipse.
+      // Listed by eye; resize() sorts them into the rod fan's order.
+      spots: [[-0.72,  0.02], [-0.38, -0.05], [-0.90,  0.30], [-0.56,  0.24],
+              [-0.64,  0.50], [-0.16,  0.12], [ 0.04, -0.12], [-0.28,  0.44]],
+      // Same side-on pose and rod fan as the pond; he is just standing in the
+      // water instead of sitting on a bank, so the legs are under the surface.
+      aim:   -0.25,
+      spread: 0.095,
+      rodLen: 3.8,
+      hand:  { x: 0.76, y: -0.88 },
+      unit:  40,
+      fill:  "#14231d",                                 // swamp shade behind the art
+      foam:  [],
+      zoom:  1,
+      src:   window.WADE_JPEG,
+      submerged: true,                                  // hide the legs, he is wading
+    },
   };
+  for (const k in AREAS) {
+    const a = AREAS[k];
+    a.ready = false;
+    a.img = new Image();
+    a.img.onload = () => { a.ready = true; };
+    a.img.src = a.src;
+  }
+  let SCENE = AREAS.pond;
   const fit = { x: 0, y: 0, w: 0, h: 0, s: 1 };
-  const sceneImg = new Image();
-  let sceneReady = false;
-  sceneImg.onload = () => { sceneReady = true; };
-  sceneImg.src = window.SCENE_JPEG;
 
   // Fit the scene into the strip between the panels, then slide it so the pond
   // sits in the middle of that strip. Anchoring on the pond rather than the
@@ -880,8 +948,16 @@
     fit.s = Math.max(view.safe.w / SCENE.w, view.h / SCENE.h) * SCENE.zoom;
     fit.w = SCENE.w * fit.s;
     fit.h = SCENE.h * fit.s;
-    fit.x = view.safe.cx - SCENE.pond.cx * fit.s;
-    fit.y = view.h / 2 - SCENE.pond.cy * fit.s;
+    fit.x = view.safe.cx - SCENE.water.cx * fit.s;
+    fit.y = view.h / 2 - SCENE.water.cy * fit.s;
+    // Centring on the pond can slide an edge inside the viewport even though
+    // the image is big enough to cover it, which shows as a bar. Pull it back
+    // just far enough to close the gap; the pond stays as centred as it can.
+    if (fit.h >= view.h) fit.y = Math.min(0, Math.max(view.h - fit.h, fit.y));
+    else                 fit.y = (view.h - fit.h) / 2;
+    const L = view.safe.x, R = view.safe.x + view.safe.w;
+    if (fit.w >= view.safe.w) fit.x = Math.min(L, Math.max(R - fit.w, fit.x));
+    else                      fit.x = L + (view.safe.w - fit.w) / 2;
   }
   const sx = x => fit.x + x * fit.s;      // artwork space -> canvas space
   const sy = y => fit.y + y * fit.s;
@@ -906,10 +982,10 @@
 
     // The painted scene decides the geometry now; everything reads off it.
     fitScene();
-    pond.cx = sx(SCENE.pond.cx);
-    pond.cy = sy(SCENE.pond.cy);
-    pond.rx = SCENE.pond.rx * fit.s;
-    pond.ry = SCENE.pond.ry * fit.s;
+    pond.cx = sx(SCENE.water.cx);
+    pond.cy = sy(SCENE.water.cy);
+    pond.rx = SCENE.water.rx * fit.s;
+    pond.ry = SCENE.water.ry * fit.s;
 
     // The dock is painted out of the scene; keep the box off in a corner so
     // the old prop-scatter test can't match anything.
@@ -918,23 +994,40 @@
     angler.u = Math.max(7, SCENE.unit * fit.s);
     angler.x = sx(SCENE.seat.x);
     angler.y = sy(SCENE.seat.y);
-    angler.tipX = angler.x + Math.cos(SCENE.aim) * angler.u * 4.2;
-    angler.tipY = angler.y + Math.sin(SCENE.aim) * angler.u * 4.2;
+    // dir -1 mirrors the whole pose, so one set of numbers covers both facings
+    angler.dir = SCENE.flip ? -1 : 1;
+    const mirror = a => (angler.dir < 0 ? Math.PI - a : a);
+    angler.tipX = angler.x + Math.cos(mirror(SCENE.aim)) * angler.u * 4.2;
+    angler.tipY = angler.y + Math.sin(mirror(SCENE.aim)) * angler.u * 4.2;
     // every rod is the same length, fanned out from the hand
-    const hx = angler.x + angler.u * 0.76, hy = angler.y - angler.u * 0.88;
-    const rodLen = angler.u * 3.8;
+    const hx = angler.x + angler.u * SCENE.hand.x * angler.dir;
+    const hy = angler.y + angler.u * SCENE.hand.y;
+    const rodLen = angler.u * SCENE.rodLen;
     for (let i = 0; i < rods.length; i++) {
-      const a = SCENE.aim + i * 0.095;
+      const a = mirror(SCENE.aim + i * SCENE.spread);
       rods[i].tipX = hx + Math.cos(a) * rodLen;
       rods[i].tipY = hy + Math.sin(a) * rodLen;
     }
     angler.tipX2 = rods[1].tipX;
     angler.tipY2 = rods[1].tipY;
 
+    // Where each bobber rests, as fractions of this area's water ellipse. The
+    // pond keeps ROD_SPOT in its original order — it was tuned against that
+    // artwork and nothing here should disturb it.
+    const spots = (SCENE.spots || ROD_SPOT).map(sp => ({
+      x: pond.cx + pond.rx * sp[0],
+      y: pond.cy + pond.ry * sp[1],
+    }));
+    // An area supplying its own spots gets them sorted into the rod fan's
+    // order, so no two lines cross. Measuring the angle in the angler's own
+    // facing keeps it clear of the atan2 wrap at +-pi.
+    if (SCENE.spots) {
+      const spotAngle = p => Math.atan2(p.y - hy, (p.x - hx) * angler.dir);
+      spots.sort((p, q) => spotAngle(p) - spotAngle(q));
+    }
     for (let i = 0; i < rods.length; i++) {
       const b = rods[i].bob;
-      b.rx = pond.cx + pond.rx * ROD_SPOT[i][0];   // where that bobber rests
-      b.ry = pond.cy + pond.ry * ROD_SPOT[i][1];
+      b.rx = spots[i].x; b.ry = spots[i].y;
       b.x = b.rx; b.y = b.ry;
     }
 
@@ -1420,25 +1513,41 @@
 
     ctx.save();
     ctx.translate(x, y + breathe);
+    // Mirror the whole pose when the area faces the other way. Everything
+    // below is written facing right; the flip is the only thing that knows.
+    if (angler.dir < 0) ctx.scale(-1, 1);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    // dangling legs
-    ctx.strokeStyle = C.pants;
-    ctx.lineWidth = u * 0.52;
-    ctx.beginPath();
-    ctx.moveTo(-u * 0.1, -u * 0.15);
-    ctx.quadraticCurveTo(u * 0.75, -u * 0.1, u * 0.9, u * 0.55);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(-u * 0.1, -u * 0.15);
-    ctx.quadraticCurveTo(u * 0.6, u * 0.02, u * 0.68, u * 0.72);
-    ctx.stroke();
+    // Wading: the legs and boots are under the surface, so instead of drawing
+    // them we put the water he displaces around his waist. Everything above
+    // the hips is the same pose as on the bank.
+    if (SCENE.submerged) {
+      ctx.fillStyle = "rgba(16,54,46,.42)";
+      ctx.beginPath(); ctx.ellipse(0, 0, u * 0.95, u * 0.28, 0, 0, TAU); ctx.fill();
+      ctx.strokeStyle = "rgba(226,247,255,.3)";
+      ctx.lineWidth = Math.max(1, u * 0.06);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, u * (1.02 + 0.04 * Math.sin(t * 1.6)), u * 0.3, 0, 0, TAU);
+      ctx.stroke();
+    } else {
+      // dangling legs
+      ctx.strokeStyle = C.pants;
+      ctx.lineWidth = u * 0.52;
+      ctx.beginPath();
+      ctx.moveTo(-u * 0.1, -u * 0.15);
+      ctx.quadraticCurveTo(u * 0.75, -u * 0.1, u * 0.9, u * 0.55);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-u * 0.1, -u * 0.15);
+      ctx.quadraticCurveTo(u * 0.6, u * 0.02, u * 0.68, u * 0.72);
+      ctx.stroke();
 
-    // boots
-    ctx.fillStyle = C.dark;
-    ctx.beginPath(); ctx.ellipse(u * 0.98, u * 0.66, u * 0.3, u * 0.19, 0.25, 0, TAU); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(u * 0.74, u * 0.84, u * 0.3, u * 0.19, 0.25, 0, TAU); ctx.fill();
+      // boots
+      ctx.fillStyle = C.dark;
+      ctx.beginPath(); ctx.ellipse(u * 0.98, u * 0.66, u * 0.3, u * 0.19, 0.25, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(u * 0.74, u * 0.84, u * 0.3, u * 0.19, 0.25, 0, TAU); ctx.fill();
+    }
 
     // torso, leaning forward a touch
     ctx.fillStyle = C.shirt;
@@ -1481,39 +1590,47 @@
 
     ctx.restore();
 
-    // rod, line and bobber, once per rod
-    const handX = x + u * 0.76, handY = y + breathe - u * 0.88;
-
-    function drawRod(cx, cy, b, lift) {
-      ctx.strokeStyle = C.plankDark;
-      ctx.lineWidth = Math.max(1.6, u * 0.11);
-      ctx.beginPath();
-      ctx.moveTo(handX - u * 0.5, handY + u * 0.42);
-      ctx.quadraticCurveTo(handX + u * 1.4, handY - lift, cx, cy);
-      ctx.stroke();
-
-      // line, with a little sag
-      ctx.strokeStyle = "rgba(242,227,208,.55)";
-      ctx.lineWidth = 1;
-      const bobY = b.y + Math.sin(t * 2.1) * 1.8 * (1 - b.air);
-      ctx.beginPath();
-      ctx.moveTo(cx, cy);
-      ctx.quadraticCurveTo((cx + b.x) / 2, (cy + bobY) / 2 + u * 0.7, b.x, bobY);
-      ctx.stroke();
-
-      // bobber
-      ctx.fillStyle = C.cream;
-      ctx.beginPath(); ctx.arc(b.x, bobY, u * 0.19, 0, TAU); ctx.fill();
-      ctx.fillStyle = "#d9483c";
-      ctx.beginPath(); ctx.arc(b.x, bobY - u * 0.06, u * 0.19, Math.PI, TAU); ctx.fill();
-    }
+    // rod, line and bobber, once per rod. Absolute coordinates, so the grip
+    // has to be mirrored by hand rather than by the transform above.
+    const handX = x + u * 0.76 * angler.dir, handY = y + breathe - u * 0.88;
 
     for (let i = liveRods() - 1; i >= 1; i--) {      // extra rods behind the first
       const r = rods[i];
-      drawRod(r.tipX + Math.sin(t * 0.5 + i * 1.4) * u * 0.12,
+      drawRod(t, u, handX, handY,
+              r.tipX + Math.sin(t * 0.5 + i * 1.4) * u * 0.12,
               r.tipY + Math.cos(t * 0.7 + i * 1.4) * u * 0.09, r.bob, u * 1.3);
     }
-    if (liveRods() > 0) drawRod(castX, castY, bob, u * 1.3);
+    if (liveRods() > 0) drawRod(t, u, handX, handY, castX, castY, bob, u * 1.3);
+  }
+
+  // One rod: the shaft bending out of the grip, the line sagging to the float,
+  // and the float itself. Shared, so the seated angler and the wader cannot
+  // drift apart on how a cast looks.
+  function drawRod(t, u, handX, handY, cx, cy, b, lift) {
+    ctx.strokeStyle = C.plankDark;
+    ctx.lineWidth = Math.max(1.6, u * 0.11);
+    ctx.beginPath();
+    const d = angler.dir || 1;                    // butt and bend follow the facing
+    ctx.moveTo(handX - u * 0.5 * d, handY + u * 0.42);
+    // lift 0 means a straight shaft; the seated angler bends his over the bank
+    if (lift) ctx.quadraticCurveTo(handX + u * 1.4 * d, handY - lift, cx, cy);
+    else      ctx.lineTo(cx, cy);
+    ctx.stroke();
+
+    // line, with a little sag
+    ctx.strokeStyle = "rgba(242,227,208,.55)";
+    ctx.lineWidth = 1;
+    const bobY = b.y + Math.sin(t * 2.1) * 1.8 * (1 - b.air);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.quadraticCurveTo((cx + b.x) / 2, (cy + bobY) / 2 + u * 0.7, b.x, bobY);
+    ctx.stroke();
+
+    // bobber
+    ctx.fillStyle = C.cream;
+    ctx.beginPath(); ctx.arc(b.x, bobY, u * 0.19, 0, TAU); ctx.fill();
+    ctx.fillStyle = "#d9483c";
+    ctx.beginPath(); ctx.arc(b.x, bobY - u * 0.06, u * 0.19, Math.PI, TAU); ctx.fill();
   }
 
   // ── Water ────────────────────────────────────────────────────────────────
@@ -1711,6 +1828,7 @@
   const elXpText = document.getElementById("xp-text");
   const elGold   = document.getElementById("gold");
   const elSilver = document.getElementById("silver");
+  const elGems   = document.getElementById("gems");
   const paneFish = document.getElementById("pane-fish");
 
   const nf = n => n.toLocaleString("en-US");
@@ -1794,7 +1912,7 @@
   }
 
   function paintHud() {
-    const f = FISH.find(x => x.id === state.picks[0]) || FISH[0];
+    const f = ALL_FISH.find(x => x.id === state.picks[0]) || areaFish()[0];
     hudSpeed.textContent = "+" + ((speedMul() - 1) * 100).toFixed(1) + "%";
     hudDbl.textContent   = (dblChance() * 100).toFixed(1) + "%";
     hudEnch.textContent  = (encChance() * 100).toFixed(1) + "%";
@@ -1803,11 +1921,28 @@
     hudBolt.textContent  = (boltChance() * 100).toFixed(1) + "%";
   }
 
+  // Gemstones: one per real hour with the game open. Deliberately on the wall
+  // clock and outside beerMul / dev speed, so nothing in the game can mint the
+  // paid currency faster. The part-hour is saved, so closing the tab at 59
+  // minutes does not throw that time away.
+  const GEM_SECS = 3600;
+  function tickGems(realDt) {
+    state.gemSecs += realDt;
+    if (state.gemSecs < GEM_SECS) return;
+    const n = Math.floor(state.gemSecs / GEM_SECS);
+    state.gemSecs -= n * GEM_SECS;
+    state.gems += n;
+    paintIdent();
+    dropToast("+" + n + " Gemstone" + (n > 1 ? "s" : ""), "#c084fc");
+    save();
+  }
+
   function paintIdent() {
     elName.textContent  = state.player.name || "—";
     elLevel.textContent = state.player.level;
     elGold.textContent   = nfg(state.gold);
     elSilver.textContent = nf(state.silver);
+    elGems.textContent   = nf(state.gems);
     const need = xpToNext(state.player.level);
     elXpFill.style.width = Math.min(100, (state.player.xp / need) * 100).toFixed(2) + "%";
     elXpText.textContent = Math.floor(state.player.xp) + " / " + need + " XP";
@@ -2128,24 +2263,87 @@
     refreshEquip(true); refreshFish(); save();
   }
 
-  // Spare gear sells for gold. Equipped items and crates are never touched.
-  function sellExtras() {
-    let total = 0, n = 0;
+  // Every spare stack, newest tier first. Equipped items live in state.equip
+  // rather than the bags, so they can never appear here; crates are not gear.
+  function spareGear() {
+    const out = [];
     for (const kind of WEAR) {
       const bag = BAGS[kind]();
-      for (const k in bag) {
-        const have = bag[k];
-        if (!have) continue;
-        total += goldValue(parse(k).t) * have;
-        n += have;
-        delete bag[k];
+      for (const k in bag) if (bag[k] > 0) {
+        const it = parse(k);
+        out.push({ kind, k, r: it.r, t: it.t, n: bag[k], gold: goldValue(it.t) * bag[k] });
       }
+    }
+    return out.sort(byTierThenRar);
+  }
+
+  // Sell the given stacks for gold. Pass spareGear() for the lot.
+  function sellGear(rows) {
+    let total = 0, n = 0;
+    for (const row of rows) {
+      const bag = BAGS[row.kind]();
+      const have = bag[row.k] || 0;
+      if (!have) continue;
+      total += goldValue(row.t) * have;
+      n += have;
+      delete bag[row.k];
     }
     if (!n) return;
     state.gold += total;
     dropToast("Sold " + nf(n) + " for " + nfg(total) + " gold", "#e5bb4e");
     paintIdent(); refreshEquip(true); paintShop(); save();
   }
+
+  // ── Sell equipment dialog ────────────────────────────────────────────────
+  const gearDlg   = document.getElementById("gear-dlg");
+  const gearList  = document.getElementById("gear-list");
+  const gearTotal = document.getElementById("gear-total");
+  const gearGo    = document.getElementById("gear-go");
+  const gearAll   = document.getElementById("gear-all");
+  let gearRows = [];                       // the stacks on show
+  const gearPicked = new Set();            // which of them are ticked, by key
+
+  function openGearDlg() {
+    gearRows = spareGear();
+    gearPicked.clear();
+    gearList.innerHTML = "";
+    if (!gearRows.length) {
+      gearList.innerHTML = '<div class="gear__empty">No spare equipment.</div>';
+    }
+    for (const row of gearRows) {
+      const b = document.createElement("button");
+      b.className = "gear__row";
+      b.innerHTML = itemIcon(row.kind, row.t) +
+        '<span class="gear__name">' + itemName(row.kind, row.r, row.t) + "</span>" +
+        '<span class="gear__n">x' + nf(row.n) + "</span>" +
+        '<span class="gear__gold">' + nfg(row.gold) + "</span>";
+      b.addEventListener("click", () => {
+        if (gearPicked.has(row.k + row.kind)) gearPicked.delete(row.k + row.kind);
+        else gearPicked.add(row.k + row.kind);
+        b.classList.toggle("gear__row--on");
+        paintGearTotal();
+      });
+      gearList.appendChild(b);
+    }
+    gearAll.disabled = !gearRows.length;
+    paintGearTotal();
+    gearDlg.hidden = false;
+  }
+
+  function paintGearTotal() {
+    const picked = gearRows.filter(r => gearPicked.has(r.k + r.kind));
+    const total = picked.reduce((s, r) => s + r.gold, 0);
+    gearTotal.textContent = nfg(total) + " Gold";
+    gearGo.disabled = !picked.length;
+  }
+
+  document.getElementById("gear-cancel").addEventListener("click", () => { gearDlg.hidden = true; });
+  gearDlg.addEventListener("click", e => { if (e.target === gearDlg) gearDlg.hidden = true; });
+  gearGo.addEventListener("click", () => {
+    sellGear(gearRows.filter(r => gearPicked.has(r.k + r.kind)));
+    gearDlg.hidden = true;
+  });
+  gearAll.addEventListener("click", () => { sellGear(gearRows); gearDlg.hidden = true; });
 
   // ── Scroll bag ───────────────────────────────────────────────────────────
   function gainScroll(id, r) {
@@ -2332,7 +2530,9 @@
     bag[k]--;
     state.museum[k] = donated(set).concat(kind);
     dropToast("Donated " + itemName(kind, set.r, set.t), LURE_COL[set.t - 1]);
-    buildMuseum();
+    // Refresh, not rebuild: buildMuseum() recreates every rail, which collapses
+    // whichever tier group is open and jumps the whole list upward.
+    refreshMuseum();
     refreshEquip(true);
     save();
   }
@@ -2598,7 +2798,7 @@
   }
 
   const sellExtrasBtn = document.getElementById("sell-extras");
-  sellExtrasBtn.addEventListener("click", sellExtras);
+  sellExtrasBtn.addEventListener("click", openGearDlg);
 
   function refreshEquip(force) {
     const st = [], crs = [];
@@ -2658,7 +2858,7 @@
     let spare = 0;
     for (const x of st) spare += goldValue(x.t) * x.n;
     sellExtrasBtn.disabled = spare <= 0;
-    sellExtrasBtn.textContent = spare > 0 ? "Sell extras \u00b7 " + nfg(spare) + " gold" : "Sell extras";
+    sellExtrasBtn.textContent = spare > 0 ? "Sell equipment \u00b7 " + nfg(spare) + " gold" : "Sell equipment";
 
     for (const kind of WEAR) {
       const w = worn(kind), el = EQ_EL[kind];
@@ -2674,7 +2874,7 @@
   function stacks() {
     const out = [];
     for (const k of ["struck", "ench", ""])
-      for (const f of FISH) {
+      for (const f of ALL_FISH) {
         const n = bagOf(k)[f.id] || 0;
         if (n > 0) out.push({ f, kind: k, n });
       }
@@ -2693,7 +2893,7 @@
     let total = 0;
     for (const k of ["", "ench", "struck"]) {
       const bag = bagOf(k);
-      for (const f of FISH) total += priceOf(f, k) * (bag[f.id] || 0);
+      for (const f of ALL_FISH) total += priceOf(f, k) * (bag[f.id] || 0);
     }
     return total;
   };
@@ -2750,7 +2950,7 @@
   let sellId = null, sellEnch = "";
 
   function paintSell() {
-    const f = FISH.find(x => x.id === sellId);
+    const f = ALL_FISH.find(x => x.id === sellId);
     if (!f) return;
     const have = bagOf(sellEnch)[f.id] || 0;
     let n = Math.floor(+sellAmt.value || 0);
@@ -2763,7 +2963,7 @@
 
   function openSell(id, kind) {
     sellId = id; sellEnch = kind || "";
-    const f = FISH.find(x => x.id === id);
+    const f = ALL_FISH.find(x => x.id === id);
     sellName.textContent = kindLabel(sellEnch) + f.name;
     sellAmt.value = 1;
     sellBox.hidden = false;
@@ -2773,7 +2973,7 @@
   }
 
   function doSell(id, kind, n) {
-    const f = FISH.find(x => x.id === id);
+    const f = ALL_FISH.find(x => x.id === id);
     if (!f) return;
     const bag = bagOf(kind);
     const have = bag[f.id] || 0;
@@ -2857,7 +3057,7 @@
     let total = 0;
     for (const k of ["", "ench", "struck"]) {
       const bag = bagOf(k);
-      for (const f of FISH) {
+      for (const f of ALL_FISH) {
         const have = bag[f.id] || 0;
         if (!have) continue;
         total += priceOf(f, k) * have;
@@ -2990,7 +3190,7 @@
   function buildFishList() {
     paneFish.innerHTML = "";
     fishEls.clear();
-    for (const f of FISH) {
+    for (const f of areaFish()) {
       const locked = !state.free && state.player.level < f.lvl;
       const b = document.createElement("button");
       b.className = "fish" + (locked ? " fish--locked" : "") + (isMut(f.id) ? " fish--mut" : "");
@@ -2998,7 +3198,8 @@
       b.setAttribute("aria-pressed", "false");
       b.innerHTML =
         '<span class="fish__fill"></span>' +
-        '<span class="fish__top"><span class="fish__name">' + f.name + "</span>" +
+        '<span class="fish__top"><span class="fish__name">' + f.name +
+          '<span class="fish__tier">(Tier ' + f.idx + ")</span></span>" +
         '<span class="fish__stat">' +
           (locked ? "Lv " + f.lvl : fishXp(f) + " XP &middot; " + catchTime(f).toFixed(1) + "s") +
         "</span></span>" +
@@ -3016,7 +3217,7 @@
 
   function refreshFish() {
     const picks = livePicks();
-    for (const f of FISH) {
+    for (const f of areaFish()) {
       const el = fishEls.get(f.id);
       if (!el) continue;
       const i = picks.indexOf(f.id);
@@ -3148,15 +3349,69 @@
   function onPartySlot(index) {}
   const mapScreen = document.getElementById("map-screen");
   function onMap() { mapScreen.hidden = !mapScreen.hidden; }
-  document.getElementById("map-close").addEventListener("click", () => { mapScreen.hidden = true; });
+  // No Back button any more, so the map needs another way out: click anywhere
+  // that is not a zone, or press Escape. The Map button itself sits under the
+  // overlay, so it cannot be relied on to toggle back.
+  mapScreen.addEventListener("click", e => {
+    if (!e.target.closest(".map__zone")) mapScreen.hidden = true;
+  });
+  window.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !mapScreen.hidden) mapScreen.hidden = true;
+  });
   document.getElementById("map-image").setAttribute("href", window.MAP_JPEG);
-  // Only the Starter pond has somewhere to go: it is the scene already built.
-  // The other three are level-locked and are not destinations yet either.
+  // Starter pond and Wade are real destinations. Altitude and Deep are still
+  // outlined and gated but lead nowhere.
   mapScreen.querySelectorAll(".map__zone").forEach(zone => {
     zone.addEventListener("click", () => {
-      if (zone.dataset.loc === "pond") mapScreen.hidden = true;
+      const loc = zone.dataset.loc;
+      if (!AREAS[loc]) return;
+      if (!state.free && state.player.level < +zone.dataset.lvl) return;
+      travelTo(loc);
+      mapScreen.hidden = true;
     });
   });
+
+  // Wade has no fish or upgrades of its own yet, so its Fish and Upgrades
+  // panes are deliberately empty and the Pond tab is swapped for the Dojo.
+  function travelTo(area) {
+    if (!AREAS[area] || state.area === area) { paintArea(); return; }
+    state.picksBy[state.area] = state.picks;      // park what was on the line
+    state.area = area;
+    state.picks = state.picksBy[area] || [];
+    for (const r of rods) { r.t = 0; r.cast.phase = "idle"; }
+    paintArea();
+    save();
+  }
+
+  function paintArea() {
+    const wade = state.area === "wade";
+    SCENE = AREAS[state.area];
+    document.documentElement.classList.toggle("area-wade", wade);
+
+    const bar = t => document.querySelector('.bars[data-group="right"] .bar[data-tab="' + t + '"]');
+    const pondBar = bar("pond"), dojoBar = bar("dojo");
+    pondBar.hidden = wade;
+    dojoBar.hidden = !wade;
+    if (wade) {
+      const open = state.free || state.player.level >= 70;
+      dojoBar.disabled = !open;
+      document.getElementById("dojo-lock").hidden = open;
+    }
+    // The Fish pane follows the local ladder. Upgrades are still the pond's
+    // tree, so Wade shows nothing there until it has one of its own.
+    buildFishList(); refreshFish();
+    if (wade) { paneUp.innerHTML = ""; upEls.clear(); }
+    else      { buildUpgrades(); refreshUpgrades(); }
+    // the tab that was open may have just been hidden
+    const cur = state.tabs.right;
+    if ((cur === "pond" && wade) || (cur === "dojo" && !wade)) {
+      state.tabs.right = "fish";
+      document.querySelectorAll('.bars[data-group="right"] .bar')
+        .forEach(b => b.setAttribute("aria-selected", String(b.dataset.tab === "fish")));
+      onTab("right", "fish");
+    }
+    resize();
+  }
 
   // Paints the LV n badges each time the map opens.
   function paintMapLocks() {
@@ -3391,6 +3646,12 @@
     dropToast("Maxed", "#bfe0ff");
   });
 
+  // Exactly enough xp to tip over, so the level-up path runs for real: the
+  // graph point, the fish list, the upgrade gates and the pond locks.
+  document.getElementById("dev-lvl").addEventListener("click", () => {
+    addXp(xpToNext(state.player.level) - state.player.xp);
+  });
+
   const devDemo = document.getElementById("dev-demo");
   devDemo.addEventListener("click", () => {
     state.demo = !state.demo;
@@ -3429,14 +3690,18 @@
     if (typeof state.player.xp !== "number") state.player.xp = 0;
     if (Array.isArray(saved.party)) state.party = saved.party;
     if (saved.owned) state.owned = saved.owned;
-    const ok = id => FISH.some(f => f.id === id);
+    const ok = id => ALL_FISH.some(f => f.id === id);
     if (Array.isArray(saved.picks)) state.picks = saved.picks.filter(ok);
     else {                                        // saves from before multi-rod
       state.picks = [saved.selected, saved.selected2].filter(id => id && ok(id));
     }
-    if (!state.picks.length) state.picks = [FISH[0].id];
+    if (saved.picksBy) for (const k in state.picksBy)
+      if (Array.isArray(saved.picksBy[k])) state.picksBy[k] = saved.picksBy[k].filter(ok);
+    if (!state.picks.length) state.picks = [areaFish()[0].id];
     if (typeof saved.gold === "number") state.gold = saved.gold;
     if (typeof saved.silver === "number") state.silver = saved.silver;
+    if (typeof saved.gems === "number") state.gems = saved.gems;
+    if (typeof saved.gemSecs === "number") state.gemSecs = saved.gemSecs;
     if (saved.ench) state.ench = saved.ench;
     if (saved.upgrades) {
       state.upgrades = saved.upgrades;
@@ -3454,6 +3719,7 @@
     if (saved.stats) Object.assign(state.stats, saved.stats);
     if (!state.stats.levelAt) state.stats.levelAt = {};   // saves from before the graph
     if (saved.bought) Object.assign(state.bought, saved.bought);
+    if (AREAS[saved.area]) state.area = saved.area;
     if (MODES.indexOf(saved.layout) >= 0) state.layout = saved.layout;
     // saves from before rarities keyed bags by bare tier and equip by number
     const migrate = bag => {
@@ -3472,9 +3738,9 @@
       if (typeof v === "number") state.equip[k] = v ? "std:" + v : "";
       else if (typeof v === "string") state.equip[k] = v;
     }
-    paintIdent(); buildFishList(); buildUpgrades(); buildPond(); buildMuseum(); buildMuseumInfo(); buildForge(); buildInventory(); refreshInventory(true); refreshEquip(true); paintShop(); refreshPondLock(); refreshScrolls(); paintFocus(); applyLayout();
+    paintIdent(); buildFishList(); buildUpgrades(); buildPond(); buildMuseum(); buildMuseumInfo(); buildForge(); buildInventory(); refreshInventory(true); refreshEquip(true); paintShop(); refreshPondLock(); refreshScrolls(); paintFocus(); paintArea(); applyLayout();
   } else {
-    paintIdent(); buildFishList(); buildUpgrades(); buildPond(); buildMuseum(); buildMuseumInfo(); buildForge(); buildInventory(); refreshInventory(true); refreshEquip(true); paintShop(); refreshPondLock(); refreshScrolls(); paintFocus(); applyLayout();
+    paintIdent(); buildFishList(); buildUpgrades(); buildPond(); buildMuseum(); buildMuseumInfo(); buildForge(); buildInventory(); refreshInventory(true); refreshEquip(true); paintShop(); refreshPondLock(); refreshScrolls(); paintFocus(); paintArea(); applyLayout();
     gate.hidden = false; gInput.focus();
   }
 
@@ -3499,7 +3765,7 @@
   let uiTimer = 0, saveTimer = 10;
 
   function fishLine(dt, fishId, hold, tKey, b, c) {
-    const f = FISH.find(x => x.id === fishId);
+    const f = ALL_FISH.find(x => x.id === fishId);
     if (!f || (!state.free && state.player.level < f.lvl)) return;
     const need = catchTime(f);
     hold[tKey] += dt;
@@ -3584,9 +3850,9 @@
     // procedural field, bank and dock no longer draw. Only the moving water
     // goes on top of it. Smoothing off keeps the pixel art hard-edged when the
     // strip scales it up.
-    if (sceneReady) {
+    if (SCENE.ready) {
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(sceneImg, fit.x, fit.y, fit.w, fit.h);
+      ctx.drawImage(SCENE.img, fit.x, fit.y, fit.w, fit.h);
       ctx.imageSmoothingEnabled = true;
     }
 
@@ -3602,7 +3868,6 @@
     drawGolden();
     drawStorm();
     drawRavens();
-    drawFog();
     drawFloaters();
   }
 
@@ -3613,6 +3878,7 @@
     // background timers are throttled hard, so allow a long catch-up
     if (dt > 60) dt = 60;
     updateGolden(dt);                      // wall clock, before the multipliers
+    tickGems(dt);                          // also wall clock: dev speed must not mint gems
     state.stats.play += dt * state.speed;   // dev speed scales playtime too
     dt *= state.speed * beerMul();
     accumulator += dt;
