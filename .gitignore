@@ -11,3 +11,6 @@ desktop.ini
 
 # Personal Claude Code settings, not shared
 .claude/settings.local.json
+
+# Personal notes, never pushed
+To do.txt
