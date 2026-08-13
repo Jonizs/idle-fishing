@@ -1,6 +1,6 @@
-// Swamp run: the game from Lv 54 (the moment Wade opens) to Lv 82 (Arapaima,
-// the last swamp fish). Answers how long each level takes there, and what the
-// xp, silver and gold rates look like once the pond is finished.
+// Swamp run: the game from Lv 54 (the moment Wade opens) to Lv 96. Answers how
+// long each level takes there, and what the xp, silver and gold rates look
+// like once the pond is finished.
 //
 // The build it starts from — the state the owner asked about:
 //   - every pond upgrade maxed: UPGRADES and POND_UPG. Mutations are bought
@@ -18,7 +18,7 @@
 // timer runs on game time, so beerMul makes storms and Focus cycles arrive
 // 2.12x faster in real seconds than their nominal length.
 //
-// Run: node simulations/swamp54.js        (LATE_XP=1.2 to redial the curve)
+// Run: node simulations/swamp54.js   (LATE_XP=1.12 TOP=82 to redial and retarget)
 const path = require("path");
 const DATA = path.join(__dirname, "..", "js", "data");
 for (const f of ["fish", "progression", "upgrades", "mutations", "pond", "wadeup"])
@@ -31,7 +31,9 @@ const xpToNext = L =>
   Math.round(9 * Math.pow(L, 1.85) * Math.pow(1.02, L) * (G.EARLY_XP[L] || 1)
              * (L > G.LATE_FROM ? Math.pow(LATE, L - G.LATE_FROM) : 1));
 
-const START = 54, TOP = 82;
+// Arapaima is the last swamp fish at 82, so from there on the rates are flat
+// and only the xp curve moves. TOP=82 stops at the last unlock instead.
+const START = 54, TOP = +process.env.TOP || 96;
 const START_SILVER = +process.env.START_SILVER || 0;
 
 // ── The finished pond build ────────────────────────────────────────────────
@@ -104,34 +106,55 @@ function sim(opts) {
 
   // Three rods, and the three best fish unlocked. Price is a flat 5.2x xp for
   // every swamp fish, so the xp pick and the silver pick are the same three.
-  const picks = () => WADE.filter(f => f.lvl <= lvl)
-                          .sort((a, b) => b.xp / b.time - a.xp / a.time).slice(0, 3);
+  // Per-catch yields only move when a level or a purchase lands, so they are
+  // cached: the per-second loop then only multiplies by the current speed.
+  let C = null;
+  const invalidate = () => { C = null; };
+  function build() {
+    const picks = WADE.filter(f => f.lvl <= lvl)
+                      .sort((a, b) => b.xp / b.time - a.xp / a.time).slice(0, 3);
+    const d = 1 + dbl(), e = enc(), pB = bolt(), r = 1 + raven();
+    // struck beats enchanted, and the storm's 5% only rolls if the bolt missed
+    const mk = inStorm => {
+      const pS = pB + (1 - pB) * (inStorm ? 0.05 : 0);
+      const pE = (1 - pS) * e;
+      return { xpM: 1 + (STRUCK_MULT - 1) * pS,
+               spM: 1 + (STRUCK_MULT - 1) * pS + (ENCH_MULT - 1) * pE };
+    };
+    const calm = mk(false), st = mk(true);
+    C = { xpCalm: 0, xpStorm: 0, spCalm: 0, spStorm: 0, gp: 0, spawn: 0, rush: 0, silver: 0 };
+    for (const f of picks) {
+      const rate = 1 / baseTime(f);            // catches per game second at 1x speed
+      const price = Math.round(f.price * (1 + 0.025 * lv("bread")));
+      const xp1 = f.xp * r * d, sp1 = price * d;
+      C.xpCalm  += rate * xp1 * calm.xpM;
+      C.xpStorm += rate * xp1 * st.xpM;
+      C.spCalm  += rate * sp1 * calm.spM;
+      C.spStorm += rate * sp1 * st.spM;
+      C.gp      += rate * d * goldCh(f);
+      C.spawn   += rate * f.idx / (100 - lv("infest"));   // golden fish, Clones on
+      C.rush    += rate * rushCh() * f.idx;
+      // what silverRate() reports in game: no struck, and beerMul folded in
+      C.silver  += price * d * (1 + (ENCH_MULT - 1) * e) * rate;
+    }
+    C.dblTrouble = 1 + 0.05 * lv("dblTrouble");
+  }
 
   // Expected yield per real second from what is on the line.
   function rates(g) {
-    let xps = 0, sps = 0, gps = 0, pops = 0, spawn = 0, rushRoll = 0, silverRate = 0;
-    const d = 1 + dbl(), e = enc();
-    for (const f of picks()) {
-      const tt = baseTime(f) / speedMul();             // game seconds per catch
-      const per = g / tt;                              // catches per real second
-      // struck beats enchanted, and the storm's 5% only rolls if the bolt missed
-      const pB = bolt(), pS = pB + (1 - pB) * (stT > 0 ? 0.05 : 0);
-      const pE = (1 - pS) * e;
-      const price = Math.round(f.price * (1 + 0.025 * lv("bread")));
-      xps += per * f.xp * (1 + raven()) * d * (1 + (STRUCK_MULT - 1) * pS);
-      sps += per * price * d * (1 + (STRUCK_MULT - 1) * pS + (ENCH_MULT - 1) * pE);
-      gps += per * d * goldCh(f);
-      spawn += per * f.idx / (100 - lv("infest"));     // golden fish, Clones on
-      rushRoll += per * rushCh() * f.idx;
-      // what silverRate() reports in game: no struck, and beerMul folded in
-      silverRate += price * d * (1 + (ENCH_MULT - 1) * e) / tt * beerMul();
-    }
+    if (!C) build();
+    const k = g * speedMul();                  // catches this real second, per 1/s
+    const storm = stT > 0;
+    const out = { xps: k * (storm ? C.xpStorm : C.xpCalm),
+                  sps: k * (storm ? C.spStorm : C.spCalm),
+                  gps: k * C.gp, pops: 0, rushRoll: k * C.rush };
     if (golden) {
-      const dt2 = 1 + 0.05 * lv("dblTrouble");         // Double Trouble, expected
-      sps  += spawn * 0.5 * Math.max(1, Math.round(silverRate * GOLD_PAY)) * dt2;
-      pops  = spawn * 0.25 * Math.max(1, Math.floor(hooked * 0.0005)) * dt2;
+      const spawn = k * C.spawn;
+      const silverRate = C.silver * speedMul() * g;   // g is beerMul game s per real s
+      out.sps  += spawn * 0.5 * Math.max(1, Math.round(silverRate * GOLD_PAY)) * C.dblTrouble;
+      out.pops  = spawn * 0.25 * Math.max(1, Math.floor(hooked * 0.0005)) * C.dblTrouble;
     }
-    return { xps, sps, gps, pops, rushRoll };
+    return out;
   }
 
   const rows = [];
@@ -150,6 +173,7 @@ function sim(opts) {
       rows.push({ lvl, secs: lvlT, xps: lvlXp / lvlT, sps: lvlS / lvlT, gph: lvlG / lvlT * 3600 });
       lvlT = 0; lvlXp = 0; lvlS = 0; lvlG = 0;
       lvl++;
+      invalidate();
       at[lvl] = t; earnedAt[lvl] = earned;
     }
     for (;;) {
@@ -158,6 +182,7 @@ function sim(opts) {
       if (!o) break;
       bank -= o.costs[wv(o.id)];
       W[o.id] = wv(o.id) + 1;
+      invalidate();
       if (W[o.id] === o.max) bought.push({ name: o.name, t, lvl });
     }
   }
