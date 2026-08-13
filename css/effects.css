@@ -164,9 +164,36 @@
   .map__art { width: 100%; height: 100%; }
   /* Outlines are painted into the map art; these are the matching hit areas. */
   .map__zone { fill: transparent; stroke: none; }
-  .map__zone[data-loc="pond"] { cursor: pointer; }
-  .map__zone[data-loc="pond"]:hover { fill: rgba(255, 201, 14, .18); }
-  .map__close { position: absolute; top: 12px; left: 12px; z-index: 2; width: auto; }
+  /* Only zones that are real destinations light up, and Wade only once it is
+     unlocked. Altitude and Deep stay inert even when their level is reached. */
+  .map__zone[data-loc="pond"],
+  .map__zone[data-loc="wade"]:not(.map__zone--locked) { cursor: pointer; }
+  .map__zone[data-loc="pond"]:hover,
+  .map__zone[data-loc="wade"]:not(.map__zone--locked):hover { fill: rgba(255, 201, 14, .18); }
+  /* Standing note where the Back button used to be. Not a hit target, so it
+     must not swallow clicks meant for the zone underneath it. */
+  .map__note {
+    position: absolute;
+    top: 12px; left: 12px;
+    z-index: 2;
+    max-width: 260px;
+    padding: 8px 11px;
+    background: rgba(20,28,38,.72);
+    border: 2px solid rgba(226,238,250,.28);
+    border-radius: 3px;
+    color: rgba(226,238,250,.82);
+    font-size: 10px;
+    line-height: 1.5;
+    pointer-events: none;
+  }
+  .map__note-h {
+    display: block;
+    margin-bottom: 3px;
+    color: var(--ember);
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
   .map__name {
     font-size: 19px;
     fill: rgba(226,238,250,.62);
