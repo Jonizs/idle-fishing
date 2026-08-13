@@ -12,6 +12,9 @@ simulations/          curve.js, costs.js, model.js, tdz.js, *.test.js
 
 Open `idle-fishing.html` in a browser. The folders must sit next to it.
 
+`To do.txt` is the owner's own idea list. Do not read it, act on it, or tidy
+it — it is not a task list for you.
+
 ---
 
 ## How to work here — read this first
