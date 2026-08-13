@@ -1,0 +1,5 @@
+To do — ideas as they come up
+
+1. Animations for unlocking/mutating fish. Animations for opening and
+   selecting a map area.
+2. Skins for the fisherman. Skins for the bobbers and rods. Skins for UI.
