@@ -74,7 +74,7 @@ function sim(opts) {
   const speedMul = () => (1 + speedBuffs() + (stT > 0 ? 1 : 0))
                          * (fcAct > 0 ? 1.5 : 1) * (rush > 0 ? 3 : 1);
   const beerMul  = () => 1 + 0.05 * lv("beer") + 0.04 * lv("hardLiquor") + 0.05 * lv("morgan")
-                         + 0.01 * GEAR_T + MUS_GAME;
+                         + 0.05 * wv("cognac") + 0.01 * GEAR_T + MUS_GAME;
   const dbl      = () => 0.005 * lv("doubleDrop") + 0.005 * lv("masterful")
                          + 0.005 * lv("doubleTrouble") + 0.025 * GEAR_T
                          + 0.01 * lv("worms") + MUS_DBL;

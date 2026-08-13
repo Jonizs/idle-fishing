@@ -803,7 +803,7 @@
   const dblChance = () => state.demo ? 1 : 0.005 * lvlOf("doubleDrop") + 0.005 * lvlOf("masterful") + 0.005 * lvlOf("doubleTrouble") + 0.025 * wornT("bait") + 0.02 * rarSum("awakened")
                         + 0.01 * lvlOf("worms") + musDbl() + scrollBuff("caribbean");
   const beerMul   = () => state.demo ? 3 : 1 + 0.05 * lvlOf("beer") + 0.04 * lvlOf("hardLiquor")
-                        + 0.05 * lvlOf("morgan")
+                        + 0.05 * lvlOf("morgan") + 0.05 * lvlOf("cognac")
                         + 0.01 * wornT("rod") + 0.01 * rarSum("refined") + musGame()
                         + scrollBuff("wind");
   const goldChance = f => state.demo ? 0.05 : 0.0001 * lvlOf("goldFisher") * f.idx * Math.pow(1.1, wornT("line"))
