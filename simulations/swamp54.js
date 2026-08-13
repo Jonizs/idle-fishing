@@ -18,7 +18,7 @@
 // timer runs on game time, so beerMul makes storms and Focus cycles arrive
 // 2.12x faster in real seconds than their nominal length.
 //
-// Run: node simulations/swamp54.js   (LATE_XP=1.12 TOP=82 to redial and retarget)
+// Run: node simulations/swamp54.js   (SWAMP_XP=1.12 TOP=82 to redial and retarget)
 const path = require("path");
 const DATA = path.join(__dirname, "..", "js", "data");
 for (const f of ["fish", "progression", "upgrades", "mutations", "pond", "wadeup"])
@@ -27,9 +27,11 @@ const G = globalThis.GAME_DATA;
 const WADE = G.WADE_FISH, WADE_UPG = G.WADE_UPG;
 
 const LATE = +process.env.LATE_XP || G.LATE_XP;
+const SWAMP = +process.env.SWAMP_XP || G.SWAMP_XP;
 const xpToNext = L =>
   Math.round(9 * Math.pow(L, 1.85) * Math.pow(1.02, L) * (G.EARLY_XP[L] || 1)
-             * (L > G.LATE_FROM ? Math.pow(LATE, L - G.LATE_FROM) : 1));
+             * (L > G.LATE_FROM ? Math.pow(LATE, Math.min(L, G.SWAMP_FROM) - G.LATE_FROM) : 1)
+             * (L > G.SWAMP_FROM ? Math.pow(SWAMP, L - G.SWAMP_FROM) : 1));
 
 // Arapaima is the last swamp fish at 82, so from there on the rates are flat
 // and only the xp curve moves. TOP=82 stops at the last unlock instead.
