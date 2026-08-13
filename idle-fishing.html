@@ -34,6 +34,7 @@
   <div class="hud__row"><span>Enchanted drop</span><b id="hud-ench">0%</b></div>
   <div class="hud__row"><span>Gold drop</span><b id="hud-gold">0%</b></div>
   <div class="hud__row"><span>Lightning strike</span><b id="hud-bolt">0%</b></div>
+  <div class="hud__row"><span>Sea raven</span><b id="hud-raven">0%</b></div>
   <div class="hud__row"><span>Game speed</span><b id="hud-game">1x</b></div>
 </div>
 
@@ -202,10 +203,16 @@
   <span id="storm-time">0:00</span>
 </div>
 
+<div class="rushtag" id="rush-tag" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10l-2 7h5L9 22l2-9H6z" fill="currentColor"/></svg>
+  <span id="rush-time">0.0s</span>
+</div>
+
 <div class="map" id="map-screen" hidden>
   <div class="map__note">
     <span class="map__note-h">Information</span>
     All buffs are combined from different location upgrades and stack together.
+    <span class="map__note-p">Player may only fish in 1 spot.</span>
   </div>
   <svg class="map__art" viewBox="0 0 1440 720" preserveAspectRatio="xMidYMid slice"
        aria-label="World map">
@@ -351,6 +358,7 @@
 <script src="js/data/fish.js"></script>
 <script src="js/data/progression.js"></script>
 <script src="js/data/upgrades.js"></script>
+<script src="js/data/wadeup.js"></script>
 <script src="js/data/mutations.js"></script>
 <script src="js/data/pond.js"></script>
 <script src="js/data/scrolls.js"></script>
@@ -395,11 +403,15 @@
   };
 
   // ── Data tables (js/data/*.js, loaded above) ────────────────────────────
-  const { FISH, WADE_FISH, ALL_FISH, EARLY_XP, LATE_FROM, LATE_XP, xpToNext, UPGRADES, splitCost, tierLvl, MUTATE, MUT, POND_UPG,
+  const { FISH, WADE_FISH, ALL_FISH, EARLY_XP, LATE_FROM, LATE_XP, xpToNext, UPGRADES, WADE_UPG, splitCost, tierLvl, MUTATE, MUT, POND_UPG,
           SCROLLS, SCROLL_RAR } = globalThis.GAME_DATA;
   // The ladder for wherever you are standing. FISH stays the pond's own list,
   // because the Breeder and the pond upgrades only ever apply there.
   const areaFish = () => (state.area === "wade" ? WADE_FISH : FISH);
+  // Same idea for the upgrade tree. Both trees' buffs apply wherever you
+  // are standing; only which list the Upgrades tab shows changes.
+  const areaUpg = () => (state.area === "wade" ? WADE_UPG : UPGRADES);
+  const ALL_UPG = UPGRADES.concat(WADE_UPG);
 
 
   const isMut = id => !!state.mutated[id];
@@ -743,7 +755,9 @@
   // Focus: a minute of +50% catch speed, then three minutes of cooldown.
   const FOCUS_ON = 60, FOCUS_CD = 180;
   const focus = { active: 0, cd: 0 };
-  const RUSH_ON = 3.5;                 // Redbull
+  const RUSH_ON = 3.5;                 // Redbull, before White Monster
+  const rushChance = () => (lvlOf("whiteMonster") ? 0.001 : 0.0005);
+  const rushLen    = () => (lvlOf("whiteMonster") ? 5 : RUSH_ON);
   const rush = { t: 0 };
 
   // ── Scrolls ──────────────────────────────────────────────────────────────
@@ -768,9 +782,10 @@
                             + 0.05 * wornT("lure") + 0.025 * rarSum("enchanted")
                             + musSpeed() + scrollBuff("buccan"))
                            * Math.pow(1.01, lvlOf("fert"));
-  const speedBase = () => state.demo ? 3.5 : 1 + speedBuffs();
-  const speedMul = () => speedBase() * (focus.active > 0 ? 1.5 : 1) * (rush.t > 0 ? 3 : 1)
-                       * (stormOn() ? 1.5 : 1);
+  // The storm adds a flat +100% catch speed rather than multiplying, so it
+  // reads the same way every other speed buff does.
+  const speedBase = () => state.demo ? 3.5 : 1 + speedBuffs() + (stormOn() ? 1 : 0);
+  const speedMul = () => speedBase() * (focus.active > 0 ? 1.5 : 1) * (rush.t > 0 ? 3 : 1);
 
   // Lure tiers 1-10, colour ramp left to right; tier 10 is white and glows.
   const LURE_MAX = 10;
@@ -781,7 +796,9 @@
   const BAIT_T1 = 0.01, BAIT_T2 = 0.005;   // bait
   // Thunder: each worn tier adds 0.2% for the sky to strike your catch.
   const boltChance = () => 0.002 * rarSum("thunder") + musBolt() + 0.005 * lvlOf("deafening")
-                        + scrollBuff("storm");
+                        + 0.0025 * lvlOf("ungodly") + scrollBuff("storm");
+  // Sea ravens: the Old Raven Scroll, plus Wade's Dark Matter line.
+  const ravenChance = () => scrollBuff("raven") + 0.005 * lvlOf("darkMatter");
 
   const dblChance = () => state.demo ? 1 : 0.005 * lvlOf("doubleDrop") + 0.005 * lvlOf("masterful") + 0.005 * lvlOf("doubleTrouble") + 0.025 * wornT("bait") + 0.02 * rarSum("awakened")
                         + 0.01 * lvlOf("worms") + musDbl() + scrollBuff("caribbean");
@@ -793,7 +810,8 @@
                         + scrollBuff("sea");
   const encChance = () => state.demo ? 0.5 : (lvlOf("enchanted") ? 0.05 : 0) + (lvlOf("extremelyShiny") ? 0.05 : 0) + 0.005 * lvlOf("masterful") + 0.01 * lvlOf("tooShiny")
                         + 0.025 * wornT("hat") + 0.03 * rarSum("ascended")
-                        + 0.01 * lvlOf("plankton") + musEnc() + scrollBuff("treasure");
+                        + 0.01 * lvlOf("plankton") + musEnc() + scrollBuff("treasure")
+                        + 0.005 * lvlOf("perseverance");
   const ENCH_MULT = 4;
 
   // ── Game state ───────────────────────────────────────────────────────────
@@ -1226,14 +1244,21 @@
   }
 
   function addFloater(text, x, y, col) {
-    if (floaters.length > 24) floaters.shift();   // don't pile up at 20x speed
+    // Drop the oldest one still waiting its turn, not the oldest overall. When
+    // catches came in faster than the queue drained, every new pop inherited a
+    // longer delay and was then shifted out before it ever showed, so nothing
+    // appeared at all. Capping the delay bounds the queue as well.
+    if (floaters.length > 24) {
+      const i = floaters.findIndex(fl => fl.delay > 0);
+      floaters.splice(i >= 0 ? i : 0, 1);
+    }
     // Several effects can fire on one catch; queue them so they rise in
     // sequence instead of printing on top of each other.
     let queued = 0;
-    for (const fl of floaters) if (fl.t <= 0) queued++;
+    for (const fl of floaters) if (fl.delay > 0) queued++;
     floaters.push({
       text, x, y, col: col || null,
-      delay: queued * 0.3,
+      delay: Math.min(queued, 3) * 0.18,
       t: 0,
       life: 1.5,
       rise: pond.ry * 0.95 + 40,
@@ -1859,6 +1884,7 @@
   const hudDbl   = document.getElementById("hud-double");
   const hudEnch  = document.getElementById("hud-ench");
   const hudBolt  = document.getElementById("hud-bolt");
+  const hudRaven = document.getElementById("hud-raven");
   const lvlChart = document.getElementById("lvl-chart");
 
   // Levels reached, plotted as hours (y) against level (x).
@@ -1901,6 +1927,8 @@
   const hudGame  = document.getElementById("hud-game");
 
   const stormTag = document.getElementById("storm-tag");
+  const rushTag  = document.getElementById("rush-tag");
+  const rushTime = document.getElementById("rush-time");
   const stormTime = document.getElementById("storm-time");
 
   function paintStormTag() {
@@ -1911,6 +1939,14 @@
     stormTime.textContent = Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0");
   }
 
+  // Redbull is an event now, not a silent multiplier: it gets its own tag and
+  // counts itself down. Painted every frame, since it runs in seconds.
+  function paintRush() {
+    const on = rush.t > 0;
+    rushTag.hidden = !on;
+    if (on) rushTime.textContent = rush.t.toFixed(1) + "s";
+  }
+
   function paintHud() {
     const f = ALL_FISH.find(x => x.id === state.picks[0]) || areaFish()[0];
     hudSpeed.textContent = "+" + ((speedMul() - 1) * 100).toFixed(1) + "%";
@@ -1919,6 +1955,7 @@
     hudGold.textContent  = (goldChance(f) * 100).toFixed(3) + "%";
     hudGame.textContent  = (beerMul() * state.speed).toFixed(2) + "x";
     hudBolt.textContent  = (boltChance() * 100).toFixed(1) + "%";
+    hudRaven.textContent = (ravenChance() * 100).toFixed(1) + "%";
   }
 
   // Gemstones: one per real hour with the game open. Deliberately on the wall
@@ -2208,8 +2245,10 @@
     if (lvlOf("pirateLoot") && Math.random() < 0.00005 * f.idx)
       gainScroll(SCROLLS[Math.floor(Math.random() * SCROLLS.length)].id, 1);
 
-    if (lvlOf("redbull") && Math.random() < 0.0005 * f.idx) {
-      rush.t = RUSH_ON;
+    // White Monster lifts Redbull from 0.05% to 0.1% per fish tier and its
+    // burst from 3.5s to 5s.
+    if (lvlOf("redbull") && Math.random() < rushChance() * f.idx) {
+      rush.t = rushLen();
       addFloater("Redbull!", bob.rx, bob.ry, "#5ad46a");
     }
     const cm = musCrate();                        // Ascended sets, multiplicative
@@ -2224,6 +2263,10 @@
     if (lvlOf("luckyCrate")) {
       if (Math.random() < LUCKY_T2 * f.idx * cm)      gainItem("crate", "lucky", 2);
       else if (Math.random() < LUCKY_T1 * f.idx * cm) gainItem("crate", "lucky", 1);
+    }
+    if (lvlOf("muddyCrate")) {
+      if (Math.random() < 0.00001 * f.idx * cm)     gainItem("crate", "lucky", 5);
+      else if (Math.random() < 0.0001 * f.idx * cm) gainItem("crate", "lucky", 4);
     }
     if (lvlOf("commonDrops")) {
       if (Math.random() < DROP_T2)      gainItem("lure", "std", 2);
@@ -3268,7 +3311,7 @@
   function buildUpgrades() {
     paneUp.innerHTML = "";
     upEls.clear();
-    for (const u of UPGRADES) {
+    for (const u of areaUpg()) {
       const b = document.createElement("button");
       b.className = "up";
       b.innerHTML =
@@ -3288,7 +3331,7 @@
   }
 
   function refreshUpgrades() {
-    for (const u of UPGRADES) {
+    for (const u of areaUpg()) {
       const el = upEls.get(u.id);
       if (!el) continue;
       const t = lvlOf(u.id);
@@ -3311,7 +3354,7 @@
   }
 
   function buyUpgrade(id) {
-    const u = UPGRADES.find(x => x.id === id);
+    const u = ALL_UPG.find(x => x.id === id);
     if (!u) return;
     const t = lvlOf(id);
     if (t >= u.max || (!state.free && state.player.level < tierLvl(u, t))) return;
@@ -3397,11 +3440,9 @@
       dojoBar.disabled = !open;
       document.getElementById("dojo-lock").hidden = open;
     }
-    // The Fish pane follows the local ladder. Upgrades are still the pond's
-    // tree, so Wade shows nothing there until it has one of its own.
+    // Both panes follow whichever location you are standing in.
     buildFishList(); refreshFish();
-    if (wade) { paneUp.innerHTML = ""; upEls.clear(); }
-    else      { buildUpgrades(); refreshUpgrades(); }
+    buildUpgrades(); refreshUpgrades();
     // the tab that was open may have just been hidden
     const cur = state.tabs.right;
     if ((cur === "pond" && wade) || (cur === "dojo" && !wade)) {
@@ -3775,7 +3816,7 @@
       let count = 1, gain = fishXp(f);
       // Old Raven Scroll: the raven doubles this catch's XP on top of
       // everything else, and leaves a sea raven behind.
-      if (scrollR("raven") && Math.random() < scrollBuff("raven")) {
+      if (Math.random() < ravenChance()) {
         gain *= 2;
         state.ravens++;
         refreshInventory(true);
@@ -3832,6 +3873,7 @@
 
     uiTimer -= dt;
     if (uiTimer <= 0) { uiTimer = 0.08; refreshFish(); paintIdent(); refreshInventory(); refreshEquip(); paintShop(); refreshUpgrades(); refreshPond(); refreshMuseum(); refreshForge(); refreshScrollUI(); paintProfile(); paintHud(); paintStormTag(); paintFocus(); }
+    paintRush();                           // seconds-long, so every frame
 
     saveTimer -= dt;
     if (saveTimer <= 0) { saveTimer = 10; save(); }

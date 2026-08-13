@@ -186,6 +186,13 @@
     line-height: 1.5;
     pointer-events: none;
   }
+  /* Second line, set off from the first so the two read as separate notes. */
+  .map__note-p {
+    display: block;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(226,238,250,.18);
+  }
   .map__note-h {
     display: block;
     margin-bottom: 3px;
@@ -245,6 +252,31 @@
     50%      { box-shadow: 0 0 18px rgba(106,168,255,.95), inset 0 0 11px rgba(150,205,255,.5); }
   }
   .phone .stormtag { right: 12px; }
+
+  /* Redbull, stacked under the storm tag so both can be up at once. */
+  .rushtag {
+    position: absolute;
+    top: 54px;
+    right: calc(var(--panel-r) + 12px);
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: #d6ffd9;
+    background: rgba(16,40,22,.78);
+    border: 2px solid #5ad46a;
+    border-radius: 3px;
+    pointer-events: none;
+    animation: rushtag 1.1s ease-in-out infinite;
+  }
+  .rushtag svg { width: 15px; height: 15px; }
+  @keyframes rushtag {
+    0%, 100% { box-shadow: 0 0 8px rgba(90,212,106,.4), inset 0 0 6px rgba(150,255,170,.2); }
+    50%      { box-shadow: 0 0 18px rgba(90,212,106,.95), inset 0 0 11px rgba(150,255,170,.5); }
+  }
+  .phone .rushtag { right: 12px; }
 
   .rar--thunder {
     border: 3px solid #63b6ff;
