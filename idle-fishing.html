@@ -947,6 +947,7 @@
       // Pulled back from 1: at 1 he stood too tall for a phone crop and clipped
       // the right edge.
       zoom:  0.85,
+      pan:   { x: 200, y: 0 },                          // slide right, show more left bank
       src:   window.WADE_JPEG,
       submerged: true,                                  // hide the legs, he is wading
     },
@@ -978,6 +979,10 @@
     const L = view.safe.x, R = view.safe.x + view.safe.w;
     if (fit.w >= view.safe.w) fit.x = Math.min(L, Math.max(R - fit.w, fit.x));
     else                      fit.x = L + (view.safe.w - fit.w) / 2;
+    // Pan last, so it survives the clamps: a scene can ask to sit off-centre
+    // even when that lets the artwork edge inside the viewport. Artwork pixels,
+    // positive x slides the picture right and shows more of its left side.
+    if (SCENE.pan) { fit.x += SCENE.pan.x * fit.s; fit.y += (SCENE.pan.y || 0) * fit.s; }
   }
   const sx = x => fit.x + x * fit.s;      // artwork space -> canvas space
   const sy = y => fit.y + y * fit.s;
