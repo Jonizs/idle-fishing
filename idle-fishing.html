@@ -928,7 +928,7 @@
     wade: {
       w: 2720, h: 1568,
       water: { cx: 1360, cy: 952, rx: 408, ry: 176 },   // the swamp channel
-      seat:  { x: 1500, y: 862 },                       // where he stands, waist line
+      seat:  { x: 1420, y: 862 },                       // where he stands, waist line
       flip:  true,                                      // face left, not right
       // The swamp gets its own float positions rather than the pond's, spread
       // out across the channel to his left. Fractions of the water ellipse.
@@ -944,7 +944,9 @@
       unit:  40,
       fill:  "#14231d",                                 // swamp shade behind the art
       foam:  [],
-      zoom:  1,
+      // Pulled back from 1: at 1 he stood too tall for a phone crop and clipped
+      // the right edge.
+      zoom:  0.85,
       src:   window.WADE_JPEG,
       submerged: true,                                  // hide the legs, he is wading
     },
