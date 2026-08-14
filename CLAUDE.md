@@ -4,11 +4,31 @@ An idle fishing game. Single-page, no build step, no server, no dependencies.
 Canvas for the pond scene, DOM for the UI.
 
 ```
-idle-fishing.html     shell + all game logic (3,575 lines, one IIFE)
+idle-fishing.html     markup + the script tags, no logic
 css/                  base, fish, panels, inventory, layout, effects, scrolls
 js/data/              fish, progression, upgrades, mutations, pond, scrolls, map
+js/game/              the game script, 01-core … 11-boot
 simulations/          curve.js, costs.js, model.js, tdz.js, *.test.js
 ```
+
+`js/game/` is one program cut into eleven files. They are **not** wrapped in
+IIFEs — they share one top-level lexical scope, which is what lets them keep
+calling each other by name. **Load order is the original order and must not
+change**, and a new file needs its `<script src>` tag adding by hand.
+
+| File | Holds |
+|---|---|
+| `01-core.js` | canvas handle, palette, save/load, data destructure |
+| `02-stats.js` | storm, scrolls, gem buffs, every stat formula, `state`, `save()` |
+| `03-scene.js` | layout maths, painted scene, grass, scenery scatter |
+| `04-pond.js` | ripples, droplets, jumpers, floaters |
+| `05-draw.js` | scenery, dock, angler, water — all canvas drawing |
+| `06-panels.js` | panel wiring, HUD, ident, inventory, scroll UI |
+| `07-items.js` | equipment, sell dialog, scroll bag, crates |
+| `08-museum.js` | museum, forge |
+| `09-shop.js` | daily shop, selling, crate dialog, shop view, gem shop |
+| `10-panes.js` | fish list, upgrades pane, pond pane |
+| `11-boot.js` | layout mode, dev menu, name gate, pointer, the loop, startup |
 
 Open `idle-fishing.html` in a browser. The folders must sit next to it.
 
@@ -84,7 +104,9 @@ owner reload.
 
 1. **Classic scripts share one global lexical scope.** Every file in
    `js/data/` is wrapped in an IIFE because five files declaring `const D`
-   collide and only the first runs. Keep the wrapper.
+   collide and only the first runs. Keep the wrapper. Files in `js/game/`
+   want the opposite — no wrapper, because they rely on that shared scope.
+   Never add an IIFE to one, and never declare the same name in two of them.
 2. **No ES modules.** `import` is CORS-fetched and `file://` has an opaque
    origin, so modules break "open the file in a browser". Classic
    `<script src>` and `<link>` only.
@@ -122,7 +144,8 @@ owner reload.
 | Pond tab upgrades | `js/data/pond.js` |
 | Scroll types, effects, icons | `js/data/scrolls.js` |
 | Styling only | the matching `css/*.css` |
-| Everything else | `idle-fishing.html` |
+| Markup, a new element or dialog | `idle-fishing.html` |
+| Everything else | the matching `js/game/*.js` — see the table up top |
 | Balance question | `simulations/` — run them, don't guess |
 
 Pricing note: `UPGRADES` entries with `max > 1` are **split into two tiers
@@ -174,6 +197,13 @@ Loot (Lv 32) at 0.005% per fish tier, **common only** — tiers 2-6 are
 currently unreachable in play. Old Raven Scroll drops a sea raven and doubles
 that catch's XP; ravens live in the normal fish inventory, are not one of the
 nine fish, and stay out of `stacks()` and `sellAllValue()`.
+
+**Gem shop.** Three gem-bought buffs (`GEM_UPG`, state `gemBuf`): Speed Demon,
+Premium Fishing, Gifted Fisherman. The first two run 14 real days, extended by
+rebuying; Gifted is permanent. **They are premium purchases and must never
+enter any silver or gold calculation** — keep them out of `simulations/`,
+out of pricing and payback maths, and out of any balance argument. Four
+real-money gem packs sit below them and are display-only.
 
 **Crates.** Clicking one opens a dialog with 1 / 10 / Half / All. `rollCrate`
 does one; `openCrate(key, n)` loops and refreshes once.
@@ -227,6 +257,7 @@ asked; change the numbers and move on.
 5. Scroll rarities above common have no source.
 6. Mythic and Common are both white, per spec — indistinguishable by border.
 7. Fish ids vs display names.
-8. The JS is still one 3,575-line IIFE. 172 of its ~330 top-level names cross
-   section boundaries, so splitting it is a real rewrite, not a file move. If
-   you take it on, one system at a time, `tdz.js` after each.
+8. The JS is now eleven files in `js/game/`, but it is still one scope: ~170
+   names cross file boundaries. Real encapsulation — each file exposing an
+   interface instead of everything seeing everything — is still open, and is
+   a rewrite rather than a file move.

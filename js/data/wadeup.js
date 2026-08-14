@@ -34,9 +34,16 @@
     { id: "whiteMonster", name: "White Monster", lvl: 66, max: 1,
       desc: "Redbull triggers on 0.1% per fish tier and lasts 5 seconds.",
       costs: [22400000] },
+    { id: "quatro",       name: "Quatro",       lvl: 67, max: 1,
+      desc: "Fish four different fish at the same time.",
+      costs: [33600000] },
     { id: "cognac",       name: "VS Cognac",    lvl: 68, max: 3, nosplit: true,
       desc: "+0.05x game speed per tier.",
       costs: [31200000, 40000000, 52000000] },
+    { id: "resonance",    name: "Resonance",    lvl: 68, max: 10, nosplit: true,
+      desc: "+0.5% chance per tier that a catch pays double XP.",
+      costs: [4480000, 5710000, 7280000, 9300000, 11900000, 15100000, 19300000,
+              24600000, 31400000, 40000000] },
   ];
 
   WADE_UPG.sort((a, b) => a.lvl - b.lvl);   // listed in unlock order
