@@ -40,6 +40,7 @@
     gap: 8px;
   }
   html.phone .topbar .bar { min-width: 0; flex: 0 1 auto; padding: 9px 12px; }
+  html.phone .hudbtn { left: -4px; top: calc(46px + env(safe-area-inset-top)); }
   html.phone .hud {
     left: 8px;
     top: calc(58px + env(safe-area-inset-top));

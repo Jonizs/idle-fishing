@@ -36,7 +36,10 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-top: 9px;
+    padding: 9px 11px;
+    background: var(--bark-dd);
+    border: 2px solid var(--bark-l);
+    border-radius: 5px;
     font-size: 12px;
   }
   .purse__row {
@@ -44,6 +47,8 @@
     align-items: center;
     gap: 6px;
   }
+  /* Gold and gems share a line; the gem gets a wider gap so they read apart. */
+  .purse__row .coin--gem { margin-left: 14px; }
   .coin {
     width: 11px; height: 11px;
     border-radius: 50%;
@@ -64,7 +69,7 @@
   /* ── Left views ──────────────────────────────────────────────────────── */
   .panel--left, .panel--right { overflow: hidden; }
   #left-main, #left-shop, #left-inv, #left-profile, #left-museum, #left-forge,
-  #left-scrolls {
+  #left-scrolls, #left-gemshop {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
@@ -259,5 +264,78 @@
     padding: 9px 10px;
   }
   .prof__row b { font-weight: normal; font-size: 11px; color: var(--ember); white-space: nowrap; }
+
+  /* ── Gem shop ────────────────────────────────────────────────────────── */
+  .gemshop {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 12px 14px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bark-l) transparent;
+  }
+  .gemup {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    margin-bottom: 7px;
+    font: inherit;
+    text-align: left;
+    color: var(--cream);
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    padding: 9px 10px;
+    cursor: pointer;
+  }
+  .gemup:hover { background: var(--bark-l); }
+  .gemup__top { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .gemup__cost {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    font-size: 12px;
+    color: #d8a5ff;
+    white-space: nowrap;
+  }
+  .gemup__d { font-size: 10px; color: rgba(242,227,208,.6); line-height: 1.35; }
+  .gemup__t { font-size: 10px; color: var(--ember); }
+  /* Running: purple edge and a tinted fill, so an active buff reads at a glance. */
+  .gemup--on {
+    border-color: #8b3fd6;
+    box-shadow: inset 0 0 0 99px rgba(139,63,214,.14);
+  }
+  .gemup--poor { opacity: .55; }
+  .gemup:disabled { cursor: default; }
+
+  /* Gem packs: two to a row. Real money, so they sit apart from the buffs. */
+  .gempacks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+  .gempack {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--cream);
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    padding: 10px;
+    cursor: pointer;
+  }
+  .gempack:hover { background: var(--bark-l); }
+  .gempack b { font-weight: normal; }
+  .gempack__p { margin-left: auto; font-size: 11px; color: var(--ember); }
+  .gempacks__note {
+    margin-top: 7px;
+    font-size: 10px;
+    color: rgba(242,227,208,.45);
+  }
 
   /* ── Inventory view ──────────────────────────────────────────────────── */

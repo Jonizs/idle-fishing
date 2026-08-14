@@ -272,7 +272,7 @@
   #gate-go:disabled { opacity: .4; cursor: not-allowed; transform: none; }
 
   @media (max-width: 860px) {
-    :root { --panel-l: 178px; --panel-r: 274px; }
+    :root { --panel-l: 247px; --panel-r: 274px; }
     .ident__name { font-size: 13px; }
     .bar { font-size: 11px; padding: 9px 9px; }
     .panel--right .bars { gap: 5px; padding: 8px; }
