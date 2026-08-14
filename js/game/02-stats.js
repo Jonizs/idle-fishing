@@ -256,7 +256,7 @@
                         + 0.01 * lvlOf("worms") + musDbl() + scrollBuff("caribbean")
                         + (gemOn("premium") ? 0.1 : 0);
   const beerMul   = () => state.demo ? 3 : 1 + 0.05 * lvlOf("beer") + 0.04 * lvlOf("hardLiquor")
-                        + 0.05 * lvlOf("morgan")
+                        + 0.05 * lvlOf("morgan") + 0.05 * lvlOf("cognac")
                         + 0.01 * wornT("rod") + 0.01 * rarSum("refined") + musGame()
                         + scrollBuff("wind")
                         + (gemOn("speed") ? 1 : 0) + (gemOn("premium") ? 0.2 : 0);
