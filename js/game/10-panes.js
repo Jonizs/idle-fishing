@@ -161,7 +161,8 @@
 
   function onTab(side, tab) {
     if (side === "left") {
-      showLeft(["shop", "inventory", "profile", "museum", "forge", "scrolls", "gemshop"]
+      showLeft(["shop", "inventory", "equipment", "profile", "museum", "forge", "scrolls",
+        "invert", "gemshop"]
         .indexOf(tab) >= 0 ? tab : "main");
       return;
     }

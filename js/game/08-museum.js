@@ -293,6 +293,101 @@
   }
   document.getElementById("forge-all").addEventListener("click", forgeAll);
 
+  // ── Invertion ────────────────────────────────────────────────────────────
+  // The scroll ladder's only rung: five tier 1 scrolls of one type, plus a
+  // flat toll of ravens and one Spyglass, become one tier 2 of that type.
+  const INVERT_SCROLLS = 5, INVERT_RAVENS = 350, INVERT_GLASS = 1;
+  const invertList = document.getElementById("invert-list");
+  const invertSlots = [];
+  const matRavens  = document.getElementById("mat-ravens");
+  const matGlass   = document.getElementById("mat-glass");
+  const matScrolls = document.getElementById("mat-scrolls");
+  const matScrollN = document.getElementById("mat-scroll-n");
+  const invertGo   = document.getElementById("invert-go");
+  let invertSig = "";
+  let invertPick = "";      // the chosen tier 1 scroll key, session only
+
+  const canInvert = k => !!k && (state.scrolls[k] || 0) >= INVERT_SCROLLS &&
+                         state.ravens >= INVERT_RAVENS &&
+                         state.spyglass >= INVERT_GLASS;
+
+  function pickInvert(k) {
+    invertPick = invertPick === k ? "" : k;
+    refreshInvert(true);
+  }
+  invertGo.addEventListener("click", () => invertScroll(invertPick));
+
+  function invertScroll(k) {
+    if (!canInvert(k)) return;
+    const { id } = parseScroll(k);
+    state.scrolls[k] -= INVERT_SCROLLS;
+    if (!state.scrolls[k]) delete state.scrolls[k];
+    state.ravens   -= INVERT_RAVENS;
+    state.spyglass -= INVERT_GLASS;
+    const nk = id + ":2";
+    state.scrolls[nk] = (state.scrolls[nk] || 0) + 1;
+    dropToast("Inverted " + SCROLL[id].name, scrollRarOf(2).col);
+    refreshInvert(true); refreshScrollUI(true); refreshInventory(true); save();
+  }
+
+  function buildInvert() {
+    invertList.innerHTML = "";
+    invertSlots.length = 0;
+    for (let i = 0; i < SCROLLS.length; i++) {
+      const b = document.createElement("button");
+      b.className = "slot";
+      b.disabled = true;
+      b.addEventListener("click", () => { if (b.dataset.key) pickInvert(b.dataset.key); });
+      invertList.appendChild(b);
+      invertSlots.push(b);
+    }
+  }
+
+  function refreshInvert(force) {
+    if (!invertSlots.length) return;
+    if (leftInvert.hidden && !force) return;
+    const rows = [];
+    for (const s of SCROLLS) {
+      const k = s.id + ":1", n = state.scrolls[k] || 0;
+      if (n > 0) rows.push({ k, s, n });
+    }
+    rows.sort((a, b) => b.n - a.n || a.s.id.localeCompare(b.s.id));
+    // A pick that ran out of scrolls stops being a pick.
+    if (invertPick && !state.scrolls[invertPick]) invertPick = "";
+    const sig = rows.map(x => x.k + ":" + x.n).join("|") +
+                "#" + state.ravens + "#" + state.spyglass + "#" + invertPick;
+    if (!force && sig === invertSig) return;
+    invertSig = sig;
+
+    const held = invertPick ? state.scrolls[invertPick] || 0 : 0;
+    matScrollN.textContent = invertPick ? SCROLL[parseScroll(invertPick).id].name : "Scrolls";
+    matScrolls.textContent = nf(Math.min(held, INVERT_SCROLLS)) + " / " + nf(INVERT_SCROLLS);
+    matRavens.textContent = nf(state.ravens) + " / " + nf(INVERT_RAVENS);
+    matGlass.textContent  = nf(state.spyglass) + " / " + nf(INVERT_GLASS);
+    invertGo.disabled = !canInvert(invertPick);
+
+    for (let i = 0; i < invertSlots.length; i++) {
+      const el = invertSlots[i], x = rows[i];
+      if (x) {
+        el.className = "slot slot--full srar--common" +
+                       (x.n >= INVERT_SCROLLS ? " slot--forge" : "") +
+                       (x.k === invertPick ? " slot--pick" : "");
+        el.disabled = false;
+        el.dataset.key = x.k;
+        el.title = x.s.name + "\n" + nf(x.n) + " / " + INVERT_SCROLLS + " tier 1" +
+                   "\nClick to select it for inverting.";
+        el.innerHTML = scrollIcon(x.s) + '<span class="slot__t">T1</span>' +
+                       '<span class="slot__n">' + nf(x.n) + "</span>";
+      } else if (el.dataset.key || el.innerHTML) {
+        el.className = "slot";
+        el.disabled = true;
+        delete el.dataset.key;
+        el.removeAttribute("title");
+        el.innerHTML = "";
+      }
+    }
+  }
+
   function refreshForge(force) {
     if (leftForge.hidden && !force) return;
     const all = [], ready = [];

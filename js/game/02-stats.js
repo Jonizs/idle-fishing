@@ -279,6 +279,7 @@
     scrolls: {},                // "type:rarity" -> count, the scroll bag
     scrollEq: ["", "", "", "", "", "", "", "", ""],   // the nine bar slots
     ravens: 0,                  // sea ravens, dropped by the Old Raven Scroll
+    spyglass: 0,                // Dark Arts drop, spent on tier 2 scrolls
     mutated: {},                // fish id -> true once bred
     layout: "auto",              // auto | phone | desktop
     bought: { daily: [], weekly: [] },   // shop slots already taken
@@ -312,6 +313,7 @@
     stats: state.stats, bought: state.bought, layout: state.layout, area: state.area,
     mutated: state.mutated, struck: state.struck, museum: state.museum,
     scrolls: state.scrolls, scrollEq: state.scrollEq, ravens: state.ravens,
+    spyglass: state.spyglass,
     splitTiers: true,
     rods: state.rods, lines: state.lines, lures: state.lures, baits: state.baits,
     hats: state.hats, crates: state.crates,

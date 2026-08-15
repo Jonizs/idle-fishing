@@ -68,8 +68,8 @@
 
   /* ── Left views ──────────────────────────────────────────────────────── */
   .panel--left, .panel--right { overflow: hidden; }
-  #left-main, #left-shop, #left-inv, #left-profile, #left-museum, #left-forge,
-  #left-scrolls, #left-gemshop {
+  #left-main, #left-shop, #left-inv, #left-equip, #left-profile, #left-museum,
+  #left-forge, #left-scrolls, #left-invert, #left-gemshop {
     flex: 1 1 auto;
     min-height: 0;
     display: flex;
@@ -200,7 +200,39 @@
   /* Crates get their own shelf: shorter than the gear grid, since there are
      only ever a handful of them. */
   .inv--crates { flex: 0 0 auto; max-height: 132px; min-height: 62px; }
+  /* A section header that folds its grid away, styled like the nav groups. */
+  .inv__h--fold {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    font: inherit;
+    font-size: 11px;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-top: 2px solid var(--bark-l);
+    cursor: pointer;
+  }
+  .inv__h--fold:hover { color: var(--cream); }
   .inv--forge  { flex: 0 0 auto; max-height: 168px; min-height: 62px; }
+  /* The chosen scroll on the Invertion bench, marked apart from a hover. */
+  .slot--pick { border-color: var(--ember); background: rgba(224,160,84,.18); }
+  #invert-go {
+    flex: none;
+    margin: 2px 12px 10px;
+    font: inherit;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    font-size: 12px;
+    padding: 11px;
+    color: var(--bark-dd);
+    background: var(--ember);
+    border: 2px solid var(--ember);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  #invert-go:hover:not(:disabled) { filter: brightness(1.08); }
+  #invert-go:disabled { opacity: .4; cursor: not-allowed; filter: none; }
   .slot--forge .slot__n { color: #ffdf7a; }
 
   .inv::-webkit-scrollbar       { width: 9px; }

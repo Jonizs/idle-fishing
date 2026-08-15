@@ -25,11 +25,15 @@
 
   const scrollsBar  = document.querySelector('[data-tab="scrolls"]');
   const scrollsLock = document.getElementById("scrolls-lock");
+  const invertBar   = document.querySelector('[data-tab="invert"]');
+  const invertLock  = document.getElementById("invert-lock");
 
   function refreshScrolls() {
     const open = state.free || lvlOf("scrolls") > 0;
     scrollsBar.disabled = !open;
     scrollsLock.hidden = open;
+    invertBar.disabled = !open;
+    invertLock.hidden = open;
   }
 
   function refreshPondLock() {
