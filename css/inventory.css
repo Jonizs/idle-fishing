@@ -1,4 +1,5 @@
-  .inv--half { flex: 1 1 0; min-height: 56px; max-height: 148px; }
+  /* Two grids sharing the panel evenly; a folded one gives its share back. */
+  .inv--half { flex: 1 1 0; min-height: 56px; }
   .eq {
     flex: none;
     display: flex;

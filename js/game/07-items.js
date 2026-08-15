@@ -113,8 +113,13 @@
       gainItem("crate", "thunder", 5);
 
     // Pirate Loot: 0.005% per fish tier for a common scroll of a random type.
-    if (lvlOf("pirateLoot") && Math.random() < 0.00005 * f.idx)
+    // Dark Arts doubles that to 0.01%.
+    if (lvlOf("pirateLoot") && Math.random() < (lvlOf("darkArts") ? 0.0001 : 0.00005) * f.idx)
       gainScroll(SCROLLS[Math.floor(Math.random() * SCROLLS.length)].id, 1);
+
+    // Dark Arts is also the only source of the Spyglass, which the Invertion
+    // bench eats one of per tier 2 scroll.
+    if (lvlOf("darkArts") && Math.random() < 0.00002 * f.idx) gainSpyglass();
 
     // White Monster lifts Redbull from 0.05% to 0.1% per fish tier and its
     // burst from 3.5s to 5s.
@@ -268,6 +273,12 @@
   }
 
   // One of each type only: equipping a type already on the bar does nothing.
+  function gainSpyglass() {
+    state.spyglass++;
+    addFloater("Spyglass!", bob.rx, bob.ry, "#d8c08a");
+    refreshInvert(true);
+  }
+
   function equipScroll(k) {
     const { id } = parseScroll(k);
     if (!state.scrolls[k]) return;

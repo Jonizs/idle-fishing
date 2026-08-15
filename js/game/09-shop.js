@@ -315,10 +315,12 @@
   const leftMain = document.getElementById("left-main");
   const leftShop = document.getElementById("left-shop");
   const leftInv  = document.getElementById("left-inv");
+  const leftEquip = document.getElementById("left-equip");
   const leftProf = document.getElementById("left-profile");
   const leftMuseum = document.getElementById("left-museum");
   const leftForge = document.getElementById("left-forge");
   const leftScrolls = document.getElementById("left-scrolls");
+  const leftInvert = document.getElementById("left-invert");
   const leftGemshop = document.getElementById("left-gemshop");
 
   document.querySelectorAll(".shopsec__row").forEach(row => {
@@ -367,16 +369,21 @@
     leftMain.hidden = view !== "main";
     leftShop.hidden = view !== "shop";
     leftInv.hidden  = view !== "inventory";
+    leftEquip.hidden = view !== "equipment";
     leftProf.hidden = view !== "profile";
     leftMuseum.hidden = view !== "museum";
     leftForge.hidden = view !== "forge";
     leftScrolls.hidden = view !== "scrolls";
+    leftInvert.hidden = view !== "invert";
     leftGemshop.hidden = view !== "gemshop";
-    if (view === "shop" || view === "inventory") { refreshInventory(true); refreshEquip(true); paintShop(); }
+    if (view === "shop" || view === "inventory" || view === "equipment") {
+      refreshInventory(true); refreshEquip(true); paintShop();
+    }
     if (view === "profile") paintProfile();
     if (view === "museum") refreshMuseum();
     if (view === "forge") refreshForge(true);
     if (view === "scrolls") refreshScrollUI(true);
+    if (view === "invert") refreshInvert(true);
     if (view === "gemshop") paintGemshop();
   }
 
@@ -464,6 +471,16 @@
   gemUpEls.forEach(el => el.addEventListener("click", () => buyGemUp(el.dataset.gemup)));
   setInterval(() => { if (!leftGemshop.hidden) paintGemshop(); }, 1000);
 
+  // Inventory section headers fold their grid away, like the nav groups.
+  document.querySelectorAll(".inv__h--fold").forEach(h => {
+    const body = h.nextElementSibling;
+    h.addEventListener("click", () => {
+      const open = h.getAttribute("aria-expanded") !== "true";
+      h.setAttribute("aria-expanded", String(open));
+      body.hidden = !open;
+    });
+  });
+
   document.querySelectorAll(".navgrp__h").forEach(h => {
     const body = h.nextElementSibling;
     h.addEventListener("click", () => {
@@ -473,8 +490,8 @@
     });
   });
 
-  ["shop-back", "inv-back", "prof-back", "museum-back", "forge-back", "scrolls-back",
-   "gemshop-back"].forEach(id =>
+  ["shop-back", "inv-back", "equip-back", "prof-back", "museum-back", "forge-back",
+   "scrolls-back", "invert-back", "gemshop-back"].forEach(id =>
     document.getElementById(id).addEventListener("click", () => {
       showLeft("main");
       const bars = [...document.querySelectorAll('[data-group="left"] .bar')];

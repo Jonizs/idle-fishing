@@ -65,6 +65,7 @@
         <div class="navgrp__body" id="grp-character-body">
           <button class="bar" role="tab" data-tab="profile"   aria-selected="true">Profile</button>
           <button class="bar" role="tab" data-tab="inventory" aria-selected="false">Inventory</button>
+          <button class="bar" role="tab" data-tab="equipment" aria-selected="false">Equipment</button>
           <button class="bar" role="tab" data-tab="museum"    aria-selected="false">Museum</button>
         </div>
       </div>
@@ -74,6 +75,7 @@
           <button class="bar" role="tab" data-tab="shop"      aria-selected="false">Shop</button>
           <button class="bar" role="tab" data-tab="forge"     aria-selected="false">Forge</button>
           <button class="bar" role="tab" data-tab="scrolls"     aria-selected="false" disabled>Fishing Scrolls <span class="bar__soon" id="scrolls-lock">(locked)</span></button>
+          <button class="bar" role="tab" data-tab="invert"     aria-selected="false" disabled>Invertion <span class="bar__soon" id="invert-lock">(locked)</span></button>
           <button class="bar" role="tab" data-tab="gemshop"   aria-selected="false">Gem Shop</button>
         </div>
       </div>
@@ -156,6 +158,23 @@
     <div class="inv" id="scrolls-inv"></div>
   </div>
 
+  <div id="left-invert" hidden>
+    <div class="shop__scroll">
+      <button class="bar" id="invert-back" style="width:100%;text-align:center;margin-bottom:2px">Back</button>
+    </div>
+    <div class="minfo">Pick a tier 1 scroll below, then invert 5 of it with
+      350 sea ravens and 1 Spyglass into a tier 2 scroll of that same type.</div>
+    <button id="invert-go" disabled>Invert</button>
+    <div class="inv__h">Materials</div>
+    <div class="prof">
+      <div class="prof__row"><span id="mat-scroll-n">Scrolls</span><b id="mat-scrolls">0 / 5</b></div>
+      <div class="prof__row"><span>Sea ravens</span><b id="mat-ravens">0</b></div>
+      <div class="prof__row"><span>Spyglass</span><b id="mat-glass">0</b></div>
+    </div>
+    <div class="inv__h">Tier 1 scrolls</div>
+    <div class="inv" id="invert-list"></div>
+  </div>
+
   <div id="left-gemshop" hidden>
     <div class="shop__scroll">
       <button class="bar" id="gemshop-back" style="width:100%;text-align:center;margin-bottom:2px">Back</button>
@@ -219,9 +238,9 @@
     <div class="chart" id="lvl-chart"></div>
   </div>
 
-  <div id="left-inv" hidden>
+  <div id="left-equip" hidden>
     <div class="shop__scroll">
-      <button class="bar" id="inv-back" style="width:100%;text-align:center;margin-bottom:2px">Back</button>
+      <button class="bar" id="equip-back" style="width:100%;text-align:center;margin-bottom:2px">Back</button>
     </div>
     <div class="inv__h">Equipped</div>
     <div class="eq">
@@ -246,13 +265,19 @@
         <span class="eq__lbl">Hat</span>
       </div>
     </div>
-    <div class="inv__h">Fish</div>
-    <div class="inv inv--half" id="inv-fish"></div>
     <div class="inv__h">Equipment</div>
-    <div class="inv inv--half" id="inv-equip"></div>
-    <div class="inv__h">Crates</div>
-    <div class="inv inv--crates" id="inv-crates"></div>
+    <div class="inv" id="inv-equip"></div>
     <button id="sell-extras">Sell equipment</button>
+  </div>
+
+  <div id="left-inv" hidden>
+    <div class="shop__scroll">
+      <button class="bar" id="inv-back" style="width:100%;text-align:center;margin-bottom:2px">Back</button>
+    </div>
+    <button class="inv__h inv__h--fold" aria-expanded="true">Fish<span class="navgrp__chev"></span></button>
+    <div class="inv inv--half" id="inv-fish"></div>
+    <button class="inv__h inv__h--fold" aria-expanded="true">Crates<span class="navgrp__chev"></span></button>
+    <div class="inv inv--half" id="inv-crates"></div>
   </div>
 </aside>
 
@@ -342,6 +367,7 @@
     <button id="dev-demo" aria-pressed="false">Showcase</button>
     <button id="dev-storm">Storm</button>
     <button id="dev-thunder">Thunder set</button>
+    <button id="dev-invert">Invert kit</button>
     <button id="dev-max">MAX</button>
     <button id="dev-lvl">+1</button>
     <button id="dev-reset">Reset</button>
