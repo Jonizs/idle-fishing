@@ -144,14 +144,6 @@
       if (Math.random() < 0.00001 * f.idx * cm)     gainItem("crate", "lucky", 5);
       else if (Math.random() < 0.0001 * f.idx * cm) gainItem("crate", "lucky", 4);
     }
-    if (lvlOf("commonDrops")) {
-      if (Math.random() < DROP_T2)      gainItem("lure", "std", 2);
-      else if (Math.random() < DROP_T1) gainItem("lure", "std", 1);
-    }
-    if (lvlOf("fancyBait")) {
-      if (Math.random() < BAIT_T2)      gainItem("bait", "std", 2);
-      else if (Math.random() < BAIT_T1) gainItem("bait", "std", 1);
-    }
   }
 
   function gainItem(kind, r, tier) {

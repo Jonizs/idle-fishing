@@ -277,18 +277,18 @@
     if (liveRods() > 0) drawRod(t, u, handX, handY, castX, castY, bob, u * 1.3);
   }
 
-  // One rod: the shaft bending out of the grip, the line sagging to the float,
+  // One rod: a straight shaft out of the grip, the line sagging to the float,
   // and the float itself. Shared, so the seated angler and the wader cannot
   // drift apart on how a cast looks.
   function drawRod(t, u, handX, handY, cx, cy, b, lift) {
     ctx.strokeStyle = C.plankDark;
     ctx.lineWidth = Math.max(1.6, u * 0.11);
     ctx.beginPath();
-    const d = angler.dir || 1;                    // butt and bend follow the facing
-    ctx.moveTo(handX - u * 0.5 * d, handY + u * 0.42);
-    // lift 0 means a straight shaft; the seated angler bends his over the bank
-    if (lift) ctx.quadraticCurveTo(handX + u * 1.4 * d, handY - lift, cx, cy);
-    else      ctx.lineTo(cx, cy);
+    // The butt sits in the hand itself, and the tip rides a little above the
+    // cast point so the shaft angles up. The line hangs off the raised tip.
+    const tipY = cy - u * 1.1;
+    ctx.moveTo(handX, handY);
+    ctx.lineTo(cx, tipY);
     ctx.stroke();
 
     // line, with a little sag
@@ -296,8 +296,8 @@
     ctx.lineWidth = 1;
     const bobY = b.y + Math.sin(t * 2.1) * 1.8 * (1 - b.air);
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.quadraticCurveTo((cx + b.x) / 2, (cy + bobY) / 2 + u * 0.7, b.x, bobY);
+    ctx.moveTo(cx, tipY);
+    ctx.quadraticCurveTo((cx + b.x) / 2, (tipY + bobY) / 2 + u * 0.7, b.x, bobY);
     ctx.stroke();
 
     // bobber
