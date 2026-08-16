@@ -43,7 +43,7 @@
 
   // ── Data tables (js/data/*.js, loaded above) ────────────────────────────
   const { FISH, WADE_FISH, ALL_FISH, EARLY_XP, LATE_FROM, LATE_XP, xpToNext, UPGRADES, WADE_UPG, splitCost, tierLvl, MUTATE, MUT, POND_UPG,
-          SCROLLS, SCROLL_RAR } = globalThis.GAME_DATA;
+          SCROLLS, SCROLL_RAR, DOJO, danTierSecs } = globalThis.GAME_DATA;
   // The ladder for wherever you are standing. FISH stays the pond's own list,
   // because the Breeder and the pond upgrades only ever apply there.
   const areaFish = () => (state.area === "wade" ? WADE_FISH : FISH);
@@ -61,7 +61,7 @@
 
 
   const lvlOf   = id => state.upgrades[id] || 0;
-  const baseTime  = f => f.time * (1 - 0.025 * lvlOf("machine")) * (1 - scrollBuff("sword"));
+  const baseTime  = f => f.time * (1 - 0.025 * lvlOf("machine") - 0.025 * dojoLvl("shoSkills")) * (1 - scrollBuff("sword"));
   const catchTime = f => baseTime(f) / speedMul();
   const focusBtn = document.getElementById("focus-btn");
   focusBtn.addEventListener("click", () => {
@@ -74,7 +74,7 @@
     if (rush.t > 0) rush.t = Math.max(0, rush.t - dt);
     if (focus.active > 0) {
       focus.active -= dt;
-      if (focus.active <= 0) { focus.active = 0; focus.cd = FOCUS_CD; }
+      if (focus.active <= 0) { focus.active = 0; focus.cd = focusCd(); }
     } else if (focus.cd > 0) {
       focus.cd -= dt;
       if (focus.cd < 0) focus.cd = 0;

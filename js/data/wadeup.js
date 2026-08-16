@@ -19,6 +19,9 @@
       desc: "+0.5% enchanted fish chance per tier.",
       costs: [448000, 560000, 700000, 872000, 1090000, 1370000, 1710000, 2140000,
               2670000, 3340000, 4180000, 5220000, 6500000, 8160000, 10200000] },
+    { id: "marketExp",    name: "Market Expansion", lvl: 55, max: 5, nosplit: true,
+      desc: "+5% sell price on all fish per tier.",
+      costs: [560000, 700000, 875000, 1090000, 1370000] },
     { id: "darkMatter",   name: "Dark Matter",  lvl: 57, max: 10, nosplit: true,
       desc: "+0.5% sea raven drop chance per tier.",
       costs: [672000, 864000, 1100000, 1410000, 1800000, 2310000, 2960000,
@@ -28,6 +31,10 @@
       costs: [336000, 409000, 498000, 610000, 745000, 904000, 1110000, 1350000,
               1650000, 2010000, 2460000, 2990000, 3650000, 4450000, 5430000,
               6610000, 8080000, 9840000, 12000000, 14600000] },
+    { id: "excellent",    name: "Excellent Technique", lvl: 62, max: 10, nosplit: true,
+      desc: "+2.5% fishing speed per tier.",
+      costs: [1120000, 1430000, 1830000, 2340000, 2990000, 3820000, 4880000,
+              6240000, 7970000, 10200000] },
     { id: "muddyCrate",   name: "Muddy Crate",  lvl: 64, max: 1,
       desc: "Per fish tier, 0.01% for a tier 4 crate and 0.001% for a tier 5.",
       costs: [14000000] },
@@ -47,6 +54,10 @@
       desc: "+0.5% chance per tier that a catch pays double XP.",
       costs: [4480000, 5710000, 7280000, 9300000, 11900000, 15100000, 19300000,
               24600000, 31400000, 40000000] },
+    { id: "seismic",      name: "Seismic Sense", lvl: 73, max: 10, nosplit: true,
+      desc: "+0.5% double drop chance per tier.",
+      costs: [12000000, 15400000, 19700000, 25200000, 32200000, 41200000,
+              52700000, 67500000, 86400000, 110000000] },
   ];
 
   WADE_UPG.sort((a, b) => a.lvl - b.lvl);   // listed in unlock order

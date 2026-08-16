@@ -67,7 +67,7 @@
     state.free = on;
     devFree.setAttribute("aria-pressed", String(on));
     paintShop(); refreshUpgrades(); buildFishList(); refreshFish();
-    refreshPondLock(); refreshPond(); refreshScrolls();
+    refreshPondLock(); refreshPond(); refreshScrolls(); refreshDojoLock();
   }
 
   document.getElementById("dev-storm").addEventListener("click", () => {
@@ -85,16 +85,25 @@
     dropToast("Thunder set granted", "#bfe0ff");
   });
 
-  // One Invertion craft's worth: 350 ravens, a Spyglass, and 5 tier 1 scrolls
+  // One Invertion craft's worth: 1250 ravens, a Spyglass, and 5 tier 1 scrolls
   // of a single random type.
   document.getElementById("dev-invert").addEventListener("click", () => {
     const s = SCROLLS[Math.floor(Math.random() * SCROLLS.length)];
     const k = s.id + ":1";
     state.scrolls[k] = (state.scrolls[k] || 0) + 5;
-    state.ravens += 350;
+    state.ravens += 1250;
     state.spyglass += 1;
     refreshInvert(true); refreshScrollUI(true); refreshInventory(true); save();
     dropToast("Invert kit \u00b7 5x " + s.name, "#d8c08a");
+  });
+
+  // CD: dan training finishes the moment it is started.
+  const devCd = document.getElementById("dev-cd");
+  devCd.addEventListener("click", () => {
+    state.dojoFast = !state.dojoFast;
+    devCd.setAttribute("aria-pressed", String(state.dojoFast));
+    if (state.dojoFast && state.dojo.active) { state.dojo.active.ends = Date.now(); stepDojo(); }
+    refreshDojo();
   });
 
   document.getElementById("dev-max").addEventListener("click", () => {
@@ -185,6 +194,10 @@
     if (typeof saved.ravens === "number") state.ravens = saved.ravens;
     if (typeof saved.spyglass === "number") state.spyglass = saved.spyglass;
     if (saved.museum) state.museum = saved.museum;
+    if (saved.dojo && saved.dojo.tiers) {
+      state.dojo.tiers = saved.dojo.tiers;
+      state.dojo.active = saved.dojo.active || null;
+    }
     if (saved.stats) Object.assign(state.stats, saved.stats);
     if (!state.stats.levelAt) state.stats.levelAt = {};   // saves from before the graph
     if (saved.bought) Object.assign(state.bought, saved.bought);
@@ -207,9 +220,9 @@
       if (typeof v === "number") state.equip[k] = v ? "std:" + v : "";
       else if (typeof v === "string") state.equip[k] = v;
     }
-    paintIdent(); buildFishList(); buildUpgrades(); buildPond(); buildMuseum(); buildMuseumInfo(); buildForge(); buildInvert(); buildInventory(); refreshInventory(true); refreshEquip(true); paintShop(); refreshPondLock(); refreshScrolls(); paintFocus(); paintArea(); applyLayout();
+    paintIdent(); buildFishList(); buildUpgrades(); buildPond(); buildDojo(); buildMuseum(); buildMuseumInfo(); buildForge(); buildInvert(); buildInventory(); refreshInventory(true); refreshEquip(true); paintShop(); refreshPondLock(); refreshScrolls(); paintFocus(); paintArea(); applyLayout();
   } else {
-    paintIdent(); buildFishList(); buildUpgrades(); buildPond(); buildMuseum(); buildMuseumInfo(); buildForge(); buildInvert(); buildInventory(); refreshInventory(true); refreshEquip(true); paintShop(); refreshPondLock(); refreshScrolls(); paintFocus(); paintArea(); applyLayout();
+    paintIdent(); buildFishList(); buildUpgrades(); buildPond(); buildDojo(); buildMuseum(); buildMuseumInfo(); buildForge(); buildInvert(); buildInventory(); refreshInventory(true); refreshEquip(true); paintShop(); refreshPondLock(); refreshScrolls(); paintFocus(); paintArea(); applyLayout();
     gate.hidden = false; gInput.focus();
   }
 
@@ -300,12 +313,13 @@
     updateFocus(dt);
     updateStorm(dt);
     stepRavens(dt);
+    stepDojo();
     const picks = livePicks();
     for (let i = 0; i < picks.length; i++)
       fishLine(dt, picks[i], rods[i], "t", rods[i].bob, rods[i].cast);
 
     uiTimer -= dt;
-    if (uiTimer <= 0) { uiTimer = 0.08; refreshFish(); paintIdent(); refreshInventory(); refreshEquip(); paintShop(); refreshUpgrades(); refreshPond(); refreshMuseum(); refreshForge(); refreshInvert(); refreshScrollUI(); paintProfile(); paintHud(); paintStormTag(); paintFocus(); }
+    if (uiTimer <= 0) { uiTimer = 0.08; refreshFish(); paintIdent(); refreshInventory(); refreshEquip(); paintShop(); refreshUpgrades(); refreshPond(); refreshDojo(); refreshMuseum(); refreshForge(); refreshInvert(); refreshScrollUI(); paintProfile(); paintHud(); paintStormTag(); paintFocus(); }
     paintRush();                           // seconds-long, so every frame
 
     saveTimer -= dt;

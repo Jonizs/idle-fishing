@@ -335,7 +335,60 @@
   </nav>
   <div class="pane" data-pane="fish" id="pane-fish"></div>
   <div class="pane" data-pane="upgrades" hidden></div>
-  <div class="pane" data-pane="dojo" id="pane-dojo" hidden></div>
+  <div class="pane" data-pane="dojo" id="pane-dojo" hidden>
+    <div class="dojophase">
+      <div class="dojophase__name">The Foundation Phase</div>
+      <div class="dojotab" data-dan="1">
+        <div class="dojotab__name">Shodan<span class="dojotab__dan">1st dan</span></div>
+        <div class="dojotab__slots" id="dojo-shodan"></div>
+      </div>
+      <div class="dojotab" data-dan="2">
+        <div class="dojotab__name">Nidan<span class="dojotab__dan">2nd dan</span></div>
+        <div class="dojotab__slots" id="dojo-nidan"></div>
+      </div>
+    </div>
+    <div class="dojophase">
+      <div class="dojophase__name">The Understanding Phase</div>
+      <div class="dojotab" data-dan="3">
+        <div class="dojotab__name">Sandan<span class="dojotab__dan">3rd dan</span></div>
+        <div class="dojotab__slots" id="dojo-sandan"></div>
+      </div>
+      <div class="dojotab" data-dan="4">
+        <div class="dojotab__name">Yondan<span class="dojotab__dan">4th dan</span></div>
+        <div class="dojotab__slots" id="dojo-yondan"></div>
+      </div>
+    </div>
+    <div class="dojophase">
+      <div class="dojophase__name">The Mastering Phase</div>
+      <div class="dojotab" data-dan="5">
+        <div class="dojotab__name">Godan<span class="dojotab__dan">5th dan</span></div>
+        <div class="dojotab__slots" id="dojo-godan"></div>
+      </div>
+      <div class="dojotab" data-dan="6">
+        <div class="dojotab__name">Rokudan<span class="dojotab__dan">6th dan</span></div>
+        <div class="dojotab__slots" id="dojo-rokudan"></div>
+      </div>
+      <div class="dojotab" data-dan="7">
+        <div class="dojotab__name">Nanadan<span class="dojotab__dan">7th dan</span></div>
+        <div class="dojotab__slots" id="dojo-nanadan"></div>
+      </div>
+      <div class="dojotab" data-dan="8">
+        <div class="dojotab__name">Hachidan<span class="dojotab__dan">8th dan</span></div>
+        <div class="dojotab__slots" id="dojo-hachidan"></div>
+      </div>
+    </div>
+    <div class="dojophase">
+      <div class="dojophase__name">Ascension</div>
+      <div class="dojotab" data-dan="9">
+        <div class="dojotab__name">Kudan<span class="dojotab__dan">9th dan</span></div>
+        <div class="dojotab__slots" id="dojo-kudan"></div>
+      </div>
+      <div class="dojotab" data-dan="10">
+        <div class="dojotab__name">Jyudan<span class="dojotab__dan">10th dan</span></div>
+        <div class="dojotab__slots" id="dojo-jyudan"></div>
+      </div>
+    </div>
+  </div>
   <div class="pane" data-pane="pond" hidden>
     <div class="pondtab" data-pane="food" data-lvl="32">
       <div class="pondtab__name">Fish Food<span class="pondtab__lvl"></span></div>
@@ -368,6 +421,7 @@
     <button id="dev-storm">Storm</button>
     <button id="dev-thunder">Thunder set</button>
     <button id="dev-invert">Invert kit</button>
+    <button id="dev-cd" aria-pressed="false">CD</button>
     <button id="dev-max">MAX</button>
     <button id="dev-lvl">+1</button>
     <button id="dev-reset">Reset</button>
@@ -446,6 +500,7 @@
 <script src="js/data/mutations.js"></script>
 <script src="js/data/pond.js"></script>
 <script src="js/data/scrolls.js"></script>
+<script src="js/data/dojo.js"></script>
 <script src="js/game/01-core.js"></script>
 <script src="js/game/02-stats.js"></script>
 <script src="js/game/03-scene.js"></script>

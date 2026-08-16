@@ -124,7 +124,7 @@
   const kindLabel = k => (k === "ench" ? "Enchanted " : k === "struck" ? "Struck " : "");
   // Bread lifts the shelf price; rounded per fish so silver stays whole.
   const priceOf = (f, k) =>
-    Math.round(fishPrice(f) * (1 + 0.025 * lvlOf("bread"))) * kindMult(k);
+    Math.round(fishPrice(f) * (1 + 0.025 * lvlOf("bread") + 0.05 * lvlOf("marketExp"))) * kindMult(k);
 
   const sellAllValue = () => {
     let total = 0;

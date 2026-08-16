@@ -9,8 +9,8 @@
   // Costs are tuned against income: fishing speed maxes near L4, double drop
   // hits 5% near L5 and 10% near L15, better lure and enchanted land by L15.
   const UPGRADES = [
-    { id: "commonDrops",  name: "Lure Drop",      lvl: 1,  max: 1,
-      desc: "Your catches can drop lures: 1% tier 1, 0.4% tier 2.",
+    { id: "starterGear",  name: "Starter Gear",   lvl: 1,  max: 1,
+      desc: "Grants a tier 1 rod, a tier 1 line and a tier 1 lure.",
       costs: [100] },
     { id: "fishingSpeed", name: "Fishing Speed",  lvl: 1,  max: 5,
       desc: "+1.75% catch speed per tier.",
@@ -33,15 +33,12 @@
     { id: "coffee",       name: "Black Coffee",   lvl: 11, max: 10,
       desc: "+2% catch speed per tier.",
       costs: [450, 585, 765, 990, 1290, 1665, 2175, 2820, 3675, 4770] },
-    { id: "luckyCrate",   name: "Equipment Crate", lvl: 13, max: 1,
+    { id: "luckyCrate",   name: "Upgraded Crate", lvl: 13, max: 1,
       desc: "Per fish tier, 0.05% for a tier 1 equipment crate and 0.005% for a tier 2.",
       costs: [1200] },
     { id: "tooShiny",     name: "Too Shiny",      lvl: 15, max: 5,
       desc: "+1% enchanted fish chance per tier.",
       costs: [900, 1500, 2400, 3800, 6000] },
-    { id: "fancyBait",    name: "Fancy Bait",     lvl: 16, max: 1,
-      desc: "Your catches can drop bait: 1% tier 1, 0.5% tier 2.",
-      costs: [10500] },
     { id: "beer",         name: "Beer",           lvl: 4,  max: 3, lvls: [4, 8, 12],
       desc: "+0.05x game speed per tier.",
       costs: [100, 600, 1500] },

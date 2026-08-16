@@ -77,7 +77,7 @@
         state.stats.levelAt[state.player.level] = state.stats.play;
       leveled = true;
     }
-    if (leveled) { buildFishList(); refreshUpgrades(); refreshPondLock(); refreshPond(); save(); }
+    if (leveled) { buildFishList(); refreshUpgrades(); refreshPondLock(); refreshPond(); refreshDojoLock(); save(); }
     paintIdent();
   }
 
@@ -139,6 +139,13 @@
     if (!state.free && state.silver < cost) return;
     if (!state.free) state.silver -= cost;
     state.upgrades[id] = t + 1;
+    // Starter Gear is a one-off grant, not a per-catch chance.
+    if (id === "starterGear") {
+      gainItem("rod", "std", 1);
+      gainItem("line", "std", 1);
+      gainItem("lure", "std", 1);
+      refreshEquip(true);
+    }
     paintIdent();
     refreshUpgrades();
     refreshFish();
@@ -205,6 +212,155 @@
     save();
   }
 
+  // ── Dojo ─────────────────────────────────────────────────────────────────
+  // One collapsible category per dan. Shodan is available from the start and
+  // every rank after it waits on the one before being finished. A training
+  // tier is bought with silver and then runs on the wall clock: one tier at a
+  // time across the whole Dojo, so a dan really does take its 24 hours.
+  const dojoOpen = new Set([1]);
+  const dojoEls = new Map();                       // training id -> its elements
+  const dojoDan = new Map();                       // training id -> its dan entry
+  const dojoLvl = id => state.dojo.tiers[id] || 0;
+  const danOf   = n => DOJO.find(d => d.dan === n);
+  const danDone = n => {
+    const d = danOf(n);
+    return !!d && d.train.every(t => dojoLvl(t.id) >= t.max);
+  };
+  // Free opens the Dojo tab but deliberately not the dan ladder: reaching the
+  // tab that way would otherwise unlock all ten at once.
+  const danOpen = n => n === 1 || danDone(n - 1);
+
+  // h/m/s, dropping the parts that are still zero.
+  function dojoClock(secs) {
+    const s = Math.max(0, Math.ceil(secs));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return h ? h + "h " + m + "m" : m ? m + "m " + (s % 60) + "s" : s + "s";
+  }
+
+  function buildDojo() {
+    dojoEls.clear(); dojoDan.clear();
+    document.querySelectorAll(".dojotab").forEach(tab => {
+      const n = +tab.dataset.dan;
+      tab.querySelector(".dojotab__name").addEventListener("click", () => {
+        if (!danOpen(n)) return;
+        if (dojoOpen.has(n)) dojoOpen.delete(n); else dojoOpen.add(n);
+        refreshDojo();
+      });
+      const d = danOf(n), slots = tab.querySelector(".dojotab__slots");
+      if (!d || !slots) return;
+      let h = '<div class="dojodesc">' + d.desc + "</div>";
+      for (const tr of d.train)
+        h += '<div class="dojorow" data-train="' + tr.id + '">' +
+               '<div class="dojorow__top"><span>' + tr.name + '</span>' +
+               '<span class="dojorow__tier"></span></div>' +
+               '<div class="dojorow__desc">' + tr.desc + "</div>" +
+               '<div class="dojorow__track"><span class="dojorow__fill"></span></div>' +
+               '<button class="dojorow__btn"></button></div>';
+      slots.innerHTML = h;
+      for (const tr of d.train) {
+        const row = slots.querySelector('[data-train="' + tr.id + '"]');
+        const btn = row.querySelector(".dojorow__btn");
+        btn.addEventListener("click", () => startTrain(tr.id));
+        dojoEls.set(tr.id, { tr, row, btn,
+          tier: row.querySelector(".dojorow__tier"),
+          fill: row.querySelector(".dojorow__fill") });
+        dojoDan.set(tr.id, d);
+      }
+    });
+    refreshDojo();
+  }
+
+  function startTrain(id) {
+    const el = dojoEls.get(id), d = dojoDan.get(id);
+    if (!el || !d || state.dojo.active) return;
+    const t = dojoLvl(id);
+    if (t >= el.tr.max || !danOpen(d.dan)) return;
+    const cost = el.tr.costs[t];
+    if (!state.free && state.silver < cost) return;
+    if (!state.free) state.silver -= cost;
+    const len = state.dojoFast ? 0 : danTierSecs(d);
+    state.dojo.active = { id, len, ends: Date.now() + len * 1000 };
+    paintIdent(); refreshDojo(); save();
+  }
+
+  // Wall clock, so a tier finishes whether the tab was open or not and no
+  // amount of game speed shortens it.
+  function stepDojo() {
+    const a = state.dojo.active;
+    if (!a || Date.now() < a.ends) return;
+    state.dojo.tiers[a.id] = dojoLvl(a.id) + 1;
+    state.dojo.active = null;
+    const el = dojoEls.get(a.id);
+    dropToast((el ? el.tr.name : "Training") + " complete", "#e8c46a");
+    paintIdent(); refreshFish(); refreshDojo(); save();
+  }
+
+  // 38 motes, each on its own clock. Negative delays mean they are already
+  // mid-flight on the first frame instead of all starting together.
+  const MOTES = 38;
+  function seedMotes(tab) {
+    if (tab.querySelector(".dojomotes")) return;
+    const box = document.createElement("div");
+    box.className = "dojomotes";
+    let h = "";
+    for (let i = 0; i < MOTES; i++) {
+      const s = (1.2 + Math.random() * 1.8).toFixed(2);
+      h += '<span class="dojomote" style="left:' + (Math.random() * 100).toFixed(2) + "%;" +
+           "width:" + s + "px;height:" + s + "px;" +
+           "--dur:" + (3.5 + Math.random() * 5.5).toFixed(2) + "s;" +
+           "--delay:" + (-Math.random() * 9).toFixed(2) + "s;" +
+           "--rise:" + (-40 - Math.random() * 80).toFixed(0) + "px;" +
+           "--drift:" + ((Math.random() - 0.5) * 26).toFixed(1) + "px;" +
+           "--peak:" + (0.45 + Math.random() * 0.55).toFixed(2) + '"></span>';
+    }
+    box.innerHTML = h;
+    tab.appendChild(box);
+  }
+
+  function refreshDojo() {
+    const a = state.dojo.active;
+    document.querySelectorAll(".dojotab").forEach(tab => {
+      const n = +tab.dataset.dan, unlocked = danOpen(n);
+      tab.classList.toggle("dojotab--locked", !unlocked);
+      tab.classList.toggle("dojotab--open", unlocked && dojoOpen.has(n));
+      const done = danDone(n);
+      tab.classList.toggle("dojotab--done", done);
+      if (done) seedMotes(tab); else tab.querySelector(".dojomotes")?.remove();
+    });
+    for (const [id, el] of dojoEls) {
+      const t = dojoLvl(id), maxed = t >= el.tr.max;
+      const mine = a && a.id === id;
+      const open = danOpen(dojoDan.get(id).dan);
+      const cost = maxed ? 0 : el.tr.costs[t];
+      const poor = !maxed && !state.free && state.silver < cost;
+      const left = mine ? (a.ends - Date.now()) / 1000 : 0;
+
+      el.tier.textContent = el.tr.max > 1 ? t + " / " + el.tr.max
+                          : t ? "Trained" : "Untrained";
+      el.fill.style.width = mine ? (100 * (1 - left / a.len)).toFixed(1) + "%" : "0%";
+      el.btn.textContent = maxed ? "Complete"
+                         : mine ? dojoClock(left)
+                         : !open ? "Locked"
+                         : a ? "Dojo busy"
+                         : "Train · " + nf(cost);
+      el.btn.disabled = maxed || !open || !!a || poor;
+      el.btn.className = "dojorow__btn" +
+        (mine ? " dojorow__btn--busy" : "") +
+        (poor ? " dojorow__btn--poor" : "");
+    }
+  }
+
+  // Called from paintArea and from the Free toggle, which can open the Dojo
+  // without the level or the area changing.
+  function refreshDojoLock() {
+    refreshDojo();
+    const dojoBar = document.querySelector('.bars[data-group="right"] .bar[data-tab="dojo"]');
+    if (!dojoBar || dojoBar.hidden) return;
+    const open = state.free || state.player.level >= 70;
+    dojoBar.disabled = !open;
+    document.getElementById("dojo-lock").hidden = open;
+  }
+
   function paintArea() {
     const wade = state.area === "wade";
     SCENE = AREAS[state.area];
@@ -214,11 +370,7 @@
     const pondBar = bar("pond"), dojoBar = bar("dojo");
     pondBar.hidden = wade;
     dojoBar.hidden = !wade;
-    if (wade) {
-      const open = state.free || state.player.level >= 70;
-      dojoBar.disabled = !open;
-      document.getElementById("dojo-lock").hidden = open;
-    }
+    if (wade) refreshDojoLock();
     // Both panes follow whichever location you are standing in.
     buildFishList(); refreshFish();
     buildUpgrades(); refreshUpgrades();

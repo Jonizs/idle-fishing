@@ -191,6 +191,8 @@
 
   // Focus: a minute of +50% catch speed, then three minutes of cooldown.
   const FOCUS_ON = 60, FOCUS_CD = 180;
+  // Shodan’s Kime shortens the wait between bursts.
+  const focusCd = () => FOCUS_CD * (1 - 0.2 * dojoLvl("shoKime"));
   const focus = { active: 0, cd: 0 };
   const RUSH_ON = 3.5;                 // Redbull, before White Monster
   const rushChance = () => (lvlOf("whiteMonster") ? 0.001 : 0.0005);
@@ -228,6 +230,7 @@
   // Fertilization multiplies the buffs, not the 1.0 base.
   const speedBuffs = () => (0.0175 * (lvlOf("fishingSpeed") + lvlOf("betterLure"))
                             + 0.02 * lvlOf("coffee") + 0.05 * lvlOf("oldSpice")
+                            + 0.025 * lvlOf("excellent")
                             + 0.05 * wornT("lure") + 0.025 * rarSum("enchanted")
                             + musSpeed() + scrollBuff("buccan"))
                            * Math.pow(1.01, lvlOf("fert"));
@@ -241,9 +244,7 @@
   const LURE_MAX = 10;
   const LURE_COL = ["#e05a5a", "#e8b22e", "#2fae3f", "#2ab8bd", "#3a72d4",
                     "#8a4fd0", "#c840a8", "#b0295e", "#e5bb4e", "#ffffff"];
-  const DROP_T1 = 0.01, DROP_T2 = 0.004;   // lure
   const LUCKY_T1 = 0.0005, LUCKY_T2 = 0.00005;   // per fish tier
-  const BAIT_T1 = 0.01, BAIT_T2 = 0.005;   // bait
   // Thunder: each worn tier adds 0.2% for the sky to strike your catch.
   const boltChance = () => 0.002 * rarSum("thunder") + musBolt() + 0.005 * lvlOf("deafening")
                         + 0.0025 * lvlOf("ungodly") + scrollBuff("storm");
@@ -252,7 +253,7 @@
   // Resonance: the catch rings twice and pays twice the xp.
   const resonChance = () => 0.005 * lvlOf("resonance");
 
-  const dblChance = () => state.demo ? 1 : 0.005 * lvlOf("doubleDrop") + 0.005 * lvlOf("masterful") + 0.005 * lvlOf("doubleTrouble") + 0.025 * wornT("bait") + 0.02 * rarSum("awakened")
+  const dblChance = () => state.demo ? 1 : 0.005 * lvlOf("doubleDrop") + 0.005 * lvlOf("masterful") + 0.005 * lvlOf("doubleTrouble") + 0.005 * lvlOf("seismic") + 0.005 * dojoLvl("shoControl") + 0.025 * wornT("bait") + 0.02 * rarSum("awakened")
                         + 0.01 * lvlOf("worms") + musDbl() + scrollBuff("caribbean")
                         + (gemOn("premium") ? 0.1 : 0);
   const beerMul   = () => state.demo ? 3 : 1 + 0.05 * lvlOf("beer") + 0.04 * lvlOf("hardLiquor")
@@ -302,6 +303,10 @@
     meals: 0,
     rods: {}, lines: {}, lures: {}, baits: {}, hats: {}, crates: {},   // "rarity:tier" -> count
     equip: { rod: "", line: "", lure: "", bait: "", hat: "" },          // "" = empty slot
+    // Dojo: tiers finished per training, plus the one tier training right
+    // now.  is a wall-clock timestamp, so it runs while the tab is shut.
+    dojo: { tiers: {}, active: null },
+    dojoFast: false,             // dev CD toggle, never saved
     stats: { play: 0, silverEarned: 0, goldEarned: 0, caught: 0, xpEarned: 0, levelAt: {} },
   };
   const save = () => store.write({
@@ -313,7 +318,7 @@
     stats: state.stats, bought: state.bought, layout: state.layout, area: state.area,
     mutated: state.mutated, struck: state.struck, museum: state.museum,
     scrolls: state.scrolls, scrollEq: state.scrollEq, ravens: state.ravens,
-    spyglass: state.spyglass,
+    spyglass: state.spyglass, dojo: state.dojo,
     splitTiers: true,
     rods: state.rods, lines: state.lines, lures: state.lures, baits: state.baits,
     hats: state.hats, crates: state.crates,

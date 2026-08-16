@@ -296,7 +296,7 @@
   // ── Invertion ────────────────────────────────────────────────────────────
   // The scroll ladder's only rung: five tier 1 scrolls of one type, plus a
   // flat toll of ravens and one Spyglass, become one tier 2 of that type.
-  const INVERT_SCROLLS = 5, INVERT_RAVENS = 350, INVERT_GLASS = 1;
+  const INVERT_SCROLLS = 5, INVERT_RAVENS = 1250, INVERT_GLASS = 1;
   const invertList = document.getElementById("invert-list");
   const invertSlots = [];
   const matRavens  = document.getElementById("mat-ravens");

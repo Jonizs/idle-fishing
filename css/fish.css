@@ -239,4 +239,150 @@
     color: rgba(242,227,208,.55);
   }
 
+  /* ── Dojo ────────────────────────────────────────────────────────────── */
+  /* One row per dan rank, same shell as a pond tab but sized to its content
+     since the ranks hold nothing yet. */
+  /* The ten ranks sit in four named phases; the phase is a heading over its
+     rows, not a row itself. */
+  .dojophase {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .dojophase__name {
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: rgba(242,227,208,.55);
+  }
+  .dojotab {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    color: var(--cream);
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    padding: 8px;
+  }
+  .dojotab--locked { opacity: .42; }
+  .dojotab__name {
+    flex: none;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .dojotab--locked .dojotab__name { cursor: not-allowed; }
+  /* Caret rotates rather than swapping glyphs, so the row never reflows. */
+  .dojotab__name::before {
+    content: "\25B8";
+    font-size: 11px;
+    color: var(--ember);
+    transition: transform .12s ease;
+  }
+  .dojotab--open .dojotab__name::before { transform: rotate(90deg); }
+  .dojotab__dan {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--ember);
+    white-space: nowrap;
+  }
+  .dojotab__slots { display: none; }
+  .dojotab--open .dojotab__slots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 7px;
+  }
+  .dojodesc {
+    font-size: 11px;
+    line-height: 1.45;
+    color: rgba(242,227,208,.72);
+  }
+  .dojorow {
+    background: var(--bark-dd);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    padding: 7px 8px;
+  }
+  .dojorow__top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 12px;
+  }
+  .dojorow__tier { font-size: 10px; color: var(--ember); white-space: nowrap; }
+  .dojorow__desc {
+    margin-top: 3px;
+    font-size: 10px;
+    line-height: 1.4;
+    color: rgba(242,227,208,.6);
+  }
+  /* The bar only reads while a tier is running; it sits flat the rest of the
+     time rather than disappearing, so the row height never jumps. */
+  .dojorow__track {
+    height: 4px;
+    margin: 6px 0;
+    background: rgba(20,9,6,.55);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .dojorow__fill {
+    display: block;
+    height: 100%;
+    width: 0%;
+    background: var(--ember);
+  }
+  .dojorow__btn {
+    width: 100%;
+    font: inherit;
+    font-size: 11px;
+    text-transform: inherit;
+    letter-spacing: inherit;
+    color: var(--cream);
+    background: var(--bark-d);
+    border: 2px solid var(--bark-l);
+    border-radius: 3px;
+    padding: 4px 6px;
+    cursor: pointer;
+  }
+  .dojorow__btn:disabled { cursor: default; opacity: .55; }
+  .dojorow__btn--busy { color: var(--ember); opacity: 1; }
+  .dojorow__btn--poor { color: #c9756a; }
+
+  /* A finished dan turns gold and gives off a few slow motes. */
+  .dojotab--done {
+    position: relative;
+    overflow: hidden;
+    border-color: #e8c46a;
+    box-shadow: 0 0 10px rgba(232,196,106,.3);
+  }
+  /* Motes are real elements rather than a gradient layer: each one carries its
+     own delay, duration, drift and rise, so they never move as a block. Built
+     once per finished dan in refreshDojo. */
+  .dojomotes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .dojomote {
+    position: absolute;
+    bottom: -4px;
+    border-radius: 50%;
+    background: rgba(255,236,180,.95);
+    opacity: 0;
+    animation: dojoMotes var(--dur) linear var(--delay) infinite;
+  }
+  @keyframes dojoMotes {
+    from { transform: translate(0, 0);                 opacity: 0; }
+    18%  {                                             opacity: var(--peak); }
+    82%  {                                             opacity: var(--peak); }
+    to   { transform: translate(var(--drift), var(--rise)); opacity: 0; }
+  }
+
   /* ── Dev speed ───────────────────────────────────────────────────────── */

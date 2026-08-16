@@ -15,7 +15,7 @@
   // Where each rod's bobber rests, as a fraction of the pond ellipse. Tuned by
   // eye against the painted basin: the ellipse is a bounding box, so its
   // corners and the shelf under the waterfall are rock, not water.
-  const ROD_SPOT = [[-0.46, 0.09], [-0.20, 0.37], [0.07, 0.03], [0.33, 0.26],
+  const ROD_SPOT = [[-0.46, 0.09], [-0.20, 0.37], [-0.02, 0.05], [0.18, 0.28],
                     [-0.59, 0.37], [0.52, -0.03], [-0.07, -0.15], [0.26, 0.55]];
   const rods = ROD_SPOT.map(() => ({
     tipX: 0, tipY: 0, t: 0,
