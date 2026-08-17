@@ -4,27 +4,6 @@
 // keep calling each other by name. Load order is the original order and
 // must not change.
 "use strict";
-  // ── Daily shop ───────────────────────────────────────────────────────────
-  const DAILY = [
-    { kind: "lure", r: "refined",   t: 3, gold: 10 },
-    { kind: "rod",  r: "std",       t: 2, gold: 25 },
-    { kind: "line", r: "enchanted", t: 2, gold: 40 },
-    { kind: "bait", r: "awakened",  t: 4, gold: 80 },
-    { kind: "rod",  r: "ascended",  t: 3, gold: 200 },
-  ];
-
-  function buyDaily(i) {
-    const d = DAILY[i];
-    if (state.bought.daily[i]) return;          // one of each per restock
-    if (!state.free && state.gold < d.gold) return;
-    state.bought.daily[i] = 1;
-    if (!state.free) state.gold -= d.gold;
-    const bag = BAGS[d.kind](), k = key(d.r, d.t);
-    bag[k] = (bag[k] || 0) + 1;
-    dropToast(itemName(d.kind, d.r, d.t), LURE_COL[d.t - 1]);
-    paintIdent(); refreshEquip(true); paintShop(); save();
-  }
-
   // Fading text for whatever you just got.
   const toastEl = document.getElementById("drop-toast");
   let toastT = null;
@@ -140,8 +119,15 @@
   // their slot is not clickable.
   const RAVEN = { id: "searaven", name: "Sea Raven", col: "#101010" };
 
+  // The fog's crafting fish sit beside the ravens for the same reason: no
+  // price, no sell, held for a craft that does not exist yet.
+  const fogStacks = () => Object.keys(state.fogFish)
+    .filter(id => state.fogFish[id] > 0 && FOG_BY_ID[id])
+    .map(id => ({ f: FOG_BY_ID[id], kind: "fogfish", n: state.fogFish[id] }));
+
   function refreshInventory(force) {
     const st = stacks();
+    for (const s of fogStacks()) st.unshift(s);
     if (state.ravens > 0) st.unshift({ f: RAVEN, kind: "raven", n: state.ravens });
     const sig = st.map(s => s.f.id + s.kind + (isMut(s.f.id) ? "m" : "") + ":" + s.n).join("|")
               + "#" + sellAllValue();
@@ -150,24 +136,36 @@
     for (const slots of fishGrids) for (let i = 0; i < INV_SLOTS; i++) {
       const el = slots[i], s = st[i];
       if (s) {
-        const raven = s.kind === "raven";
+        const raven = s.kind === "raven", fogf = s.kind === "fogfish";
         el.className = "slot slot--full"
                      + (s.kind === "ench" ? " slot--ench" : "")
                      + (s.kind === "struck" ? " slot--struck" : "")
                      + (raven ? " slot--raven" : "")
+                     + (fogf ? " slot--fogfish" : "")
                      + (isMut(s.f.id) ? " slot--mut" : "");
-        el.disabled = raven;
-        if (raven) { delete el.dataset.fish; delete el.dataset.kind; }
+        el.disabled = raven || fogf;
+        if (raven || fogf) { delete el.dataset.fish; delete el.dataset.kind; }
         else { el.dataset.fish = s.f.id; el.dataset.kind = s.kind; }
         el.title = kindLabel(s.kind) + (isMut(s.f.id) ? "Mutated " : "") + s.f.name;
-        el.innerHTML = fishIcon(s.kind === "ench" ? "#f0cf74"
-                              : s.kind === "struck" ? "#bfe0ff" : s.f.col) +
-                       '<span class="slot__n">' + nf(s.n) + "</span>";
+        // A fog slot that is already showing this fish only has its count
+        // rewritten: a full innerHTML rebuild would wipe the motes and restart
+        // all 38 of them on every repaint.
+        if (fogf && el.dataset.fogfish === s.f.id) {
+          const nEl = el.querySelector(".slot__n");
+          if (nEl) nEl.textContent = nf(s.n);
+        } else {
+          el.innerHTML = fishIcon(s.kind === "ench" ? "#f0cf74"
+                                : s.kind === "struck" ? "#bfe0ff" : s.f.col) +
+                         '<span class="slot__n">' + nf(s.n) + "</span>";
+          if (fogf) { el.dataset.fogfish = s.f.id; seedMotes(el, true); }
+          else delete el.dataset.fogfish;
+        }
       } else if (el.dataset.fish || el.innerHTML) {
         el.className = "slot";
         el.disabled = true;
         delete el.dataset.fish;
         delete el.dataset.ench;
+        delete el.dataset.fogfish;
         el.removeAttribute("title");
         el.innerHTML = "";
       }
@@ -324,7 +322,7 @@
   const leftGemshop = document.getElementById("left-gemshop");
 
   document.querySelectorAll(".shopsec__row").forEach(row => {
-    const stocked = row.id === "crate-row" || row.id === "daily-row";
+    const stocked = row.id === "crate-row";
     for (let i = 0; i < +row.dataset.slots; i++) {
       const d = document.createElement(stocked ? "button" : "div");
       d.className = "shopslot";
@@ -336,16 +334,6 @@
         d.title = itemName("crate", "std", tier) + " \u00b7 " + nf(CRATES[tier - 1].cost) + " silver";
         d.addEventListener("click", () => buyCrate(tier));
         crateSlots.push(d);
-      } else if (row.id === "daily-row") {
-        const it = DAILY[i];
-        d.className += rarCls(it.r);
-        d.innerHTML = itemIcon(it.kind, it.t) +
-                      '<span class="slot__t">T' + it.t + "</span>" +
-                      '<span class="shopslot__cost shopslot__cost--gold">' + nf(it.gold) + "</span>" +
-                      '<span class="shopslot__x"></span>';
-        d.title = itemTip(it.kind, it.r, it.t) + " \u00b7 " + nf(it.gold) + " gold";
-        d.addEventListener("click", () => buyDaily(i));
-        dailySlots.push(d);
       }
       row.appendChild(d);
     }
@@ -356,12 +344,6 @@
       const ok = state.free || state.silver >= CRATES[i].cost;
       crateSlots[i].disabled = !ok;
       crateSlots[i].classList.toggle("shopslot--buy", ok);
-    }
-    for (let i = 0; i < dailySlots.length; i++) {
-      const sold = !!state.bought.daily[i];
-      const ok = !sold && (state.free || state.gold >= DAILY[i].gold);
-      dailySlots[i].disabled = !ok;
-      dailySlots[i].classList.toggle("shopslot--sold", sold);
     }
   }
 

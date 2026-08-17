@@ -11,10 +11,10 @@
 //
 //   lvl(id)      upgrade level                      demo()      dev showcase
 //   dojo(id)     dojo tiers finished                stormOn()   storm running
-//   wornT(kind)  tier of the worn item              gem(k)      gem buff on
-//   rarSum(rar)  worn tiers of a rarity             focusOn()   focus active
-//   scrollR(id)  equipped scroll's rarity           rushOn()    rush active
-//   mus.*        museum set buffs
+//   wornT(kind)  tier of the worn item              fogOn()     fog running
+//   rarSum(rar)  worn tiers of a rarity             gem(k)      gem buff on
+//   scrollR(id)  equipped scroll's rarity           focusOn()   focus active
+//   mus.*        museum set buffs                   rushOn()    rush active
 //
 // gem() is a ctx input on purpose: gem buffs are premium and must stay out of
 // any silver or gold argument, so simulations pass a ctx whose gem() is false.
@@ -40,7 +40,9 @@
                              * Math.pow(1.01, ctx.lvl("fert"));
     // The storm adds a flat +100% catch speed rather than multiplying, so it
     // reads the same way every other speed buff does.
+    // The fog adds a flat +75% the same way.
     const speedBase = () => ctx.demo() ? 3.5 : 1 + speedBuffs() + (ctx.stormOn() ? 1 : 0)
+                          + (ctx.fogOn() ? 0.75 : 0)
                           + (ctx.gem("premium") ? 0.5 : 0);
     const speedMul = () => speedBase() * (ctx.focusOn() ? 1.5 : 1) * (ctx.rushOn() ? 3 : 1);
 
@@ -48,9 +50,10 @@
     const boltChance = () => 0.002 * ctx.rarSum("thunder") + mus.bolt() + 0.005 * ctx.lvl("deafening")
                           + 0.0025 * ctx.lvl("ungodly") + scrollBuff("storm");
     // Sea ravens: the Old Raven Scroll, plus Wade's Dark Matter line.
-    const ravenChance = () => scrollBuff("raven") + 0.005 * ctx.lvl("darkMatter");
+    const ravenChance = () => scrollBuff("raven") + 0.005 * ctx.lvl("darkMatter")
+                            + 0.005 * ctx.dojo("nidSpirit");
     // Resonance: the catch rings twice and pays twice the xp.
-    const resonChance = () => 0.005 * ctx.lvl("resonance");
+    const resonChance = () => 0.005 * ctx.lvl("resonance") + 0.005 * ctx.dojo("nidLight");
 
     const dblChance = () => ctx.demo() ? 1 : 0.005 * ctx.lvl("doubleDrop") + 0.005 * ctx.lvl("masterful") + 0.005 * ctx.lvl("doubleTrouble") + 0.005 * ctx.lvl("seismic") + 0.005 * ctx.dojo("shoControl") + 0.025 * ctx.wornT("bait") + 0.02 * ctx.rarSum("awakened")
                           + 0.01 * ctx.lvl("worms") + mus.dbl() + scrollBuff("caribbean")
@@ -65,7 +68,7 @@
     const encChance = () => ctx.demo() ? 0.5 : (ctx.lvl("enchanted") ? 0.05 : 0) + (ctx.lvl("extremelyShiny") ? 0.05 : 0) + 0.005 * ctx.lvl("masterful") + 0.01 * ctx.lvl("tooShiny")
                           + 0.025 * ctx.wornT("hat") + 0.03 * ctx.rarSum("ascended")
                           + 0.01 * ctx.lvl("plankton") + mus.enc() + scrollBuff("treasure")
-                          + 0.005 * ctx.lvl("perseverance")
+                          + 0.005 * ctx.lvl("perseverance") + 0.005 * ctx.dojo("sanStance")
                           + (ctx.gem("premium") ? 0.1 : 0);
 
     return { scrollBuff, speedBuffs, speedBase, speedMul, boltChance, ravenChance,

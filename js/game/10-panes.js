@@ -224,11 +224,12 @@
   const danOf   = n => DOJO.find(d => d.dan === n);
   const danDone = n => {
     const d = danOf(n);
-    return !!d && d.train.every(t => dojoLvl(t.id) >= t.max);
+    // A dan with no trainings yet is never "done", or it would open the next.
+    return !!d && d.train.length > 0 && d.train.every(t => dojoLvl(t.id) >= t.max);
   };
-  // Free opens the Dojo tab but deliberately not the dan ladder: reaching the
-  // tab that way would otherwise unlock all ten at once.
-  const danOpen = n => n === 1 || danDone(n - 1);
+  // Free opens the whole ladder, so every dan is reachable without maxing the
+  // one before it.
+  const danOpen = n => state.free || n === 1 || danDone(n - 1);
 
   // h/m/s, dropping the parts that are still zero.
   function dojoClock(secs) {
@@ -298,10 +299,11 @@
   // 38 motes, each on its own clock. Negative delays mean they are already
   // mid-flight on the first frame instead of all starting together.
   const MOTES = 38;
-  function seedMotes(tab) {
+  // Also used by the fog fish inventory slots, in red.
+  function seedMotes(tab, red) {
     if (tab.querySelector(".dojomotes")) return;
     const box = document.createElement("div");
-    box.className = "dojomotes";
+    box.className = "dojomotes" + (red ? " dojomotes--red" : "");
     let h = "";
     for (let i = 0; i < MOTES; i++) {
       const s = (1.2 + Math.random() * 1.8).toFixed(2);

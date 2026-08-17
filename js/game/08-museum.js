@@ -44,8 +44,8 @@
 
   // Every way a worn item can enter the game, derived from the live tables so
   // it stays honest if a drop source changes.
-  // Built on first use, not at load: DAILY and CRATES are declared further
-  // down the file, so evaluating this eagerly would hit the temporal dead zone.
+  // Built on first use, not at load: CRATES is declared further down the
+  // file, so evaluating this eagerly would hit the temporal dead zone.
   let OBTAINABLE = null;
   function buildObtainable() {
     const set = new Set();
@@ -57,7 +57,6 @@
     for (const k of WEAR) add(k, "thunder", 5);                                // lightning crates
     for (let t = 1; t <= ROD_TIERS[ROD_TIERS.length - 1].length; t++)           // golden fish
       for (const r of ["std", "refined", "enchanted", "awakened"]) add("rod", r, t);
-    for (const d of DAILY) add(d.kind, d.r, d.t);                              // daily shop
     // Forging lifts an item a rung, so obtainability propagates up the ladder
     // from whatever the drop tables actually provide.
     for (let i = 0; i < FORGE_LADDER.length - 1; i++)

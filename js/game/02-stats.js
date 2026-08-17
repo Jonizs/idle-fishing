@@ -14,7 +14,8 @@
   const ravens = [];
 
   const stormTier = () => lvlOf("theStorm");
-  const stormLen  = () => STORM_BASE + Math.max(0, stormTier() - 1) * 60;
+  const stormLen  = () => STORM_BASE + Math.max(0, stormTier() - 1) * 60
+                        + 30 * dojoLvl("nidEarth");
   const stormOn   = () => storm.t > 0;
 
   function startStorm(secs) {
@@ -199,6 +200,43 @@
   const rushLen    = () => (lvlOf("whiteMonster") ? 5 : RUSH_ON);
   const rush = { t: 0 };
 
+  // ── Fog ──────────────────────────────────────────────────────────────────
+  // Its own event, like the storm and Redbull: rolled on a catch, timed in
+  // seconds, and locked out while the storm is overhead. Sandan's Deeper Fog
+  // stretches it a second per tier.
+  const FOG_LEN = 10, FOG_MULT = 20, FOG_COL = "#e0342f";
+  // Named fogEv, not fog: 03-scene.js already owns `fog`, the drifting
+  // scenery bank, and these files share one lexical scope.
+  // `a` is the drawn strength, ramped over FOG_FADE seconds each way so the
+  // fog rolls in and lifts instead of snapping on.
+  const FOG_FADE = 1.5;
+  const fogEv = { t: 0, a: 0 };
+  const fogLen = () => FOG_LEN + dojoLvl("sanFog");
+  const fogOn  = () => fogEv.t > 0;
+  // One crafting fish per area, catchable only inside the fog. They have no
+  // price, so like the sea raven they stay out of stacks() and sellAllValue().
+  const FOG_FISH = {
+    pond: { id: "goldenorfe", name: "Golden Orfe", col: FOG_COL },
+    wade: { id: "manjuari",   name: "Manjuari",    col: FOG_COL },
+  };
+  const FOG_BY_ID = Object.fromEntries(Object.values(FOG_FISH).map(f => [f.id, f]));
+  const fogFish = () => FOG_FISH[state.area] || FOG_FISH.pond;
+
+  function startFog(secs) {
+    if (stormOn()) return;
+    fogEv.t = secs || fogLen();
+    dropToast("The fog rolls in", "#cfd8dd");
+  }
+
+  // Stepped from the loop, not from updateStorm: that returns early in several
+  // branches and would strand the countdown.
+  function stepFog(dt) {
+    if (fogEv.t > 0) fogEv.t = stormOn() ? 0 : Math.max(0, fogEv.t - dt);
+    const to = fogEv.t > 0 ? 1 : 0, step = dt / FOG_FADE;
+    fogEv.a = to > fogEv.a ? Math.min(to, fogEv.a + step)
+                           : Math.max(to, fogEv.a - step);
+  }
+
   // ── Scrolls ──────────────────────────────────────────────────────────────
   // Bag keys are "type:rarity" ("raven:3"). state.scrollEq holds the same key
   // per bar slot, or "" for empty. Only one scroll of a type may be equipped,
@@ -243,6 +281,7 @@
     scrollR:  id => scrollR(id),
     demo:     () => state.demo,
     stormOn:  () => stormOn(),
+    fogOn:    () => fogOn(),
     gem:      k => gemOn(k),
     focusOn:  () => focus.active > 0,
     rushOn:   () => rush.t > 0,
@@ -264,10 +303,10 @@
     scrolls: {},                // "type:rarity" -> count, the scroll bag
     scrollEq: ["", "", "", "", "", "", "", "", ""],   // the nine bar slots
     ravens: 0,                  // sea ravens, dropped by the Old Raven Scroll
+    fogFish: {},                // crafting fish id -> count, caught in the fog
     spyglass: 0,                // Dark Arts drop, spent on tier 2 scrolls
     mutated: {},                // fish id -> true once bred
     layout: "auto",              // auto | phone | desktop
-    bought: { daily: [], weekly: [] },   // shop slots already taken
     player: { name: "", level: 1, xp: 0, online: true },
     party: [null, null, null, null],
     tabs: { left: "profile", right: "fish" },
@@ -299,10 +338,10 @@
     picks: state.picks, picksBy: state.picksBy,
     gold: state.gold, silver: state.silver,
     gems: state.gems, gemSecs: state.gemSecs, gemBuf: state.gemBuf,
-    stats: state.stats, bought: state.bought, layout: state.layout, area: state.area,
+    stats: state.stats, layout: state.layout, area: state.area,
     mutated: state.mutated, struck: state.struck, museum: state.museum,
     scrolls: state.scrolls, scrollEq: state.scrollEq, ravens: state.ravens,
-    spyglass: state.spyglass, dojo: state.dojo,
+    spyglass: state.spyglass, dojo: state.dojo, fogFish: state.fogFish,
     splitTiers: true,
     rods: state.rods, lines: state.lines, lures: state.lures, baits: state.baits,
     hats: state.hats, crates: state.crates,

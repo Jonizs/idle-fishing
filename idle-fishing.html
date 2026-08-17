@@ -100,14 +100,6 @@
     <div class="shop__scroll">
       <button class="bar" id="shop-back" style="width:100%;text-align:center;margin-bottom:12px">Back</button>
       <div class="shopsec">
-        <div class="shopsec__h">Daily shop</div>
-        <div class="shopsec__row" id="daily-row" data-slots="5"></div>
-      </div>
-      <div class="shopsec">
-        <div class="shopsec__h">Weekly shop</div>
-        <div class="shopsec__row" data-slots="5"></div>
-      </div>
-      <div class="shopsec">
         <div class="shopsec__h">Standard hat crates</div>
         <div class="shopsec__row" id="crate-row" data-slots="5"></div>
       </div>
@@ -291,6 +283,11 @@
   <span id="rush-time">0.0s</span>
 </div>
 
+<div class="fogtag" id="fog-tag" hidden>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h13a3 3 0 100-6 3 3 0 00-2.8 2M2 13h18M5 17h15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <span id="fog-time">0.0s</span>
+</div>
+
 <div class="map" id="map-screen" hidden>
   <div class="map__note">
     <span class="map__note-h">Information</span>
@@ -419,6 +416,7 @@
     <button id="dev-free" aria-pressed="false">Free</button>
     <button id="dev-demo" aria-pressed="false">Showcase</button>
     <button id="dev-storm">Storm</button>
+    <button id="dev-fog">Fog</button>
     <button id="dev-thunder">Thunder set</button>
     <button id="dev-invert">Invert kit</button>
     <button id="dev-cd" aria-pressed="false">CD</button>

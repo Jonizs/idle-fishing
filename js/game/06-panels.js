@@ -110,6 +110,15 @@
     if (on) rushTime.textContent = rush.t.toFixed(1) + "s";
   }
 
+  // The fog runs in seconds like Redbull, and drags its screen veil with it.
+  const fogTag = document.getElementById("fog-tag");
+  const fogTime = document.getElementById("fog-time");
+  function paintFog() {
+    const on = fogOn();
+    fogTag.hidden = !on;
+    if (on) fogTime.textContent = fogEv.t.toFixed(1) + "s";
+  }
+
   function paintHud() {
     const f = ALL_FISH.find(x => x.id === state.picks[0]) || areaFish()[0];
     hudSpeed.textContent = "+" + ((speedMul() - 1) * 100).toFixed(1) + "%";
