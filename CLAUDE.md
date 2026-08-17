@@ -146,6 +146,7 @@ owner reload.
 | Styling only | the matching `css/*.css` |
 | Markup, a new element or dialog | `idle-fishing.html` |
 | Everything else | the matching `js/game/*.js` — see the table up top |
+| A catch formula (speed, double, gold, enchant) | `js/data/formulas.js` |
 | Balance question | `simulations/` — run them, don't guess |
 
 Pricing note: `UPGRADES` entries with `max > 1` are **split into two tiers
@@ -170,6 +171,7 @@ them.
 | `pond.js` | `POND_UPG` |
 | `scrolls.js` | `SCROLLS`, `SCROLL_RAR` |
 | `map.js` | `MAP_JPEG` — 280KB base64, never open it |
+| `formulas.js` | `makeFormulas(ctx)` — the catch formulas, DOM-free so Node can load them |
 
 ---
 

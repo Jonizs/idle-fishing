@@ -2,7 +2,7 @@ const fs=require("fs"), path=require("path");
 const ROOT=path.join(__dirname,"..");
 const html=fs.readFileSync(path.join(ROOT,"idle-fishing.html"),"utf8");
 const srcs=[...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m=>m[1]);
-const js=html.match(/<script>([\s\S]*)<\/script>/)[1];
+const inline=html.match(/<script>([\s\S]*)<\/script>/); const js=inline?inline[1]:"";
 const RECT={left:0,top:0,right:800,bottom:600,width:800,height:600};
 function el(){
   const t=function(){};
