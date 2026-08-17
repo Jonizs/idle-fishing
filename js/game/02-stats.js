@@ -212,7 +212,6 @@
     for (const k of state.scrollEq) if (k && parseScroll(k).id === id) return parseScroll(k).r;
     return 0;
   };
-  const scrollBuff = id => SCROLL[id].per * scrollR(id);
 
   // ── Gem shop buffs ──────────────────────────────────────────────────────
   // Bought with gems, timed in real days rather than playtime, so they keep
@@ -226,48 +225,33 @@
   const gemOn = k => k === "gifted" ? !!state.gemBuf.gifted
                                     : state.gemBuf[k] > Date.now();
 
-  // Focus multiplies the finished total rather than adding to it.
-  // Fertilization multiplies the buffs, not the 1.0 base.
-  const speedBuffs = () => (0.0175 * (lvlOf("fishingSpeed") + lvlOf("betterLure"))
-                            + 0.02 * lvlOf("coffee") + 0.05 * lvlOf("oldSpice")
-                            + 0.025 * lvlOf("excellent")
-                            + 0.05 * wornT("lure") + 0.025 * rarSum("enchanted")
-                            + musSpeed() + scrollBuff("buccan"))
-                           * Math.pow(1.01, lvlOf("fert"));
-  // The storm adds a flat +100% catch speed rather than multiplying, so it
-  // reads the same way every other speed buff does.
-  const speedBase = () => state.demo ? 3.5 : 1 + speedBuffs() + (stormOn() ? 1 : 0)
-                        + (gemOn("premium") ? 0.5 : 0);
-  const speedMul = () => speedBase() * (focus.active > 0 ? 1.5 : 1) * (rush.t > 0 ? 3 : 1);
-
   // Lure tiers 1-10, colour ramp left to right; tier 10 is white and glows.
   const LURE_MAX = 10;
   const LURE_COL = ["#e05a5a", "#e8b22e", "#2fae3f", "#2ab8bd", "#3a72d4",
                     "#8a4fd0", "#c840a8", "#b0295e", "#e5bb4e", "#ffffff"];
   const LUCKY_T1 = 0.0005, LUCKY_T2 = 0.00005;   // per fish tier
-  // Thunder: each worn tier adds 0.2% for the sky to strike your catch.
-  const boltChance = () => 0.002 * rarSum("thunder") + musBolt() + 0.005 * lvlOf("deafening")
-                        + 0.0025 * lvlOf("ungodly") + scrollBuff("storm");
-  // Sea ravens: the Old Raven Scroll, plus Wade's Dark Matter line.
-  const ravenChance = () => scrollBuff("raven") + 0.005 * lvlOf("darkMatter");
-  // Resonance: the catch rings twice and pays twice the xp.
-  const resonChance = () => 0.005 * lvlOf("resonance");
+  // ── Catch formulas ───────────────────────────────────────────────────────
+  // The formulas themselves live in js/data/formulas.js so Node can load them
+  // without a DOM; this wires them to the live game. Every ctx entry is a
+  // function, not a value: state and half these accessors are declared in
+  // later files, so reading them eagerly here would hit the TDZ.
+  const FORMULA = makeFormulas({
+    lvl:      id => lvlOf(id),
+    dojo:     id => dojoLvl(id),
+    wornT:    kind => wornT(kind),
+    rarSum:   rar => rarSum(rar),
+    scrollR:  id => scrollR(id),
+    demo:     () => state.demo,
+    stormOn:  () => stormOn(),
+    gem:      k => gemOn(k),
+    focusOn:  () => focus.active > 0,
+    rushOn:   () => rush.t > 0,
+    mus: { speed: () => musSpeed(), game: () => musGame(), dbl: () => musDbl(),
+           enc: () => musEnc(), bolt: () => musBolt() },
+  });
+  const { scrollBuff, speedBuffs, speedBase, speedMul, boltChance, ravenChance,
+          resonChance, dblChance, beerMul, goldChance, encChance } = FORMULA;
 
-  const dblChance = () => state.demo ? 1 : 0.005 * lvlOf("doubleDrop") + 0.005 * lvlOf("masterful") + 0.005 * lvlOf("doubleTrouble") + 0.005 * lvlOf("seismic") + 0.005 * dojoLvl("shoControl") + 0.025 * wornT("bait") + 0.02 * rarSum("awakened")
-                        + 0.01 * lvlOf("worms") + musDbl() + scrollBuff("caribbean")
-                        + (gemOn("premium") ? 0.1 : 0);
-  const beerMul   = () => state.demo ? 3 : 1 + 0.05 * lvlOf("beer") + 0.04 * lvlOf("hardLiquor")
-                        + 0.05 * lvlOf("morgan") + 0.05 * lvlOf("cognac")
-                        + 0.01 * wornT("rod") + 0.01 * rarSum("refined") + musGame()
-                        + scrollBuff("wind")
-                        + (gemOn("speed") ? 1 : 0) + (gemOn("premium") ? 0.2 : 0);
-  const goldChance = f => state.demo ? 0.05 : 0.0001 * lvlOf("goldFisher") * f.idx * Math.pow(1.1, wornT("line"))
-                        + scrollBuff("sea");
-  const encChance = () => state.demo ? 0.5 : (lvlOf("enchanted") ? 0.05 : 0) + (lvlOf("extremelyShiny") ? 0.05 : 0) + 0.005 * lvlOf("masterful") + 0.01 * lvlOf("tooShiny")
-                        + 0.025 * wornT("hat") + 0.03 * rarSum("ascended")
-                        + 0.01 * lvlOf("plankton") + musEnc() + scrollBuff("treasure")
-                        + 0.005 * lvlOf("perseverance")
-                        + (gemOn("premium") ? 0.1 : 0);
   const ENCH_MULT = 4;
 
   // ── Game state ───────────────────────────────────────────────────────────
