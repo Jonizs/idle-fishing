@@ -75,6 +75,13 @@
     else startStorm(stormTier() ? stormLen() : 300);   // works before the upgrade
   });
 
+  // Rolls the fog in by hand, or clears it. The storm still blocks it.
+  document.getElementById("dev-fog").addEventListener("click", () => {
+    if (fogOn()) { fogEv.t = 0; dropToast("Fog cleared", "#cfd8dd"); }
+    else if (stormOn()) dropToast("No fog during a storm", "#8fb6e0");
+    else startFog();
+  });
+
   document.getElementById("dev-thunder").addEventListener("click", () => {
     for (const k of WEAR) {
       const bag = BAGS[k]();
@@ -187,6 +194,7 @@
     }
     if (saved.mutated) state.mutated = saved.mutated;
     if (saved.struck) state.struck = saved.struck;
+    if (saved.fogFish) state.fogFish = saved.fogFish;
     if (saved.scrolls) state.scrolls = saved.scrolls;
     if (Array.isArray(saved.scrollEq))
       for (let i = 0; i < SCROLL_SLOTS; i++)
@@ -200,7 +208,6 @@
     }
     if (saved.stats) Object.assign(state.stats, saved.stats);
     if (!state.stats.levelAt) state.stats.levelAt = {};   // saves from before the graph
-    if (saved.bought) Object.assign(state.bought, saved.bought);
     if (AREAS[saved.area]) state.area = saved.area;
     if (MODES.indexOf(saved.layout) >= 0) state.layout = saved.layout;
     // saves from before rarities keyed bags by bare tier and equip by number
@@ -264,6 +271,15 @@
         addRaven(b.rx, b.ry);
         addFloater("Raven!", b.rx, b.ry, "#a855f7");
       }
+      // The fog's crafting fish: 2% per fish tier, 20x XP on top of everything
+      // else, and it lands in the fish inventory under its own red frame.
+      if (fogOn() && Math.random() < 0.02 * f.idx) {
+        const ff = fogFish();
+        gain *= FOG_MULT;
+        state.fogFish[ff.id] = (state.fogFish[ff.id] || 0) + 1;
+        refreshInventory(true);
+        addFloater(ff.name + "!", b.rx, b.ry, FOG_COL, true);
+      }
       gain *= 1 + scrollBuff("skull");          // Old Skull Scroll
       if (Math.random() < dblChance()) {
         count = 2; gain *= 2;
@@ -313,6 +329,7 @@
     updateFocus(dt);
     updateStorm(dt);
     stepRavens(dt);
+    stepFog(dt);
     stepDojo();
     const picks = livePicks();
     for (let i = 0; i < picks.length; i++)
@@ -320,7 +337,7 @@
 
     uiTimer -= dt;
     if (uiTimer <= 0) { uiTimer = 0.08; refreshFish(); paintIdent(); refreshInventory(); refreshEquip(); paintShop(); refreshUpgrades(); refreshPond(); refreshDojo(); refreshMuseum(); refreshForge(); refreshInvert(); refreshScrollUI(); paintProfile(); paintHud(); paintStormTag(); paintFocus(); }
-    paintRush();                           // seconds-long, so every frame
+    paintRush(); paintFog();               // seconds-long, so every frame
 
     saveTimer -= dt;
     if (saveTimer <= 0) { saveTimer = 10; save(); }
@@ -357,6 +374,7 @@
     drawGolden();
     drawStorm();
     drawRavens();
+    drawFogEvent(t);      // over the world, under the popups
     drawFloaters();
   }
 

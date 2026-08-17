@@ -7,7 +7,7 @@
   // ── Equipment: lures, bait, hats, rods, lines, crates ────────────────────
   // Bag keys are "rarity:tier" ("std:3"). state.equip holds the same key,
   // or "" for an empty slot.
-  const eqSlots = [], crateSlots = [], dailySlots = [], invCrateSlots = [];
+  const eqSlots = [], crateSlots = [], invCrateSlots = [];
   const CRATE_SLOTS = 24;
   const KINDS = ["rod", "line", "lure", "bait", "hat", "crate"];
   const WEAR  = ["rod", "line", "lure", "bait", "hat"];   // the five worn slots
@@ -127,6 +127,11 @@
       rush.t = rushLen();
       addFloater("Redbull!", bob.rx, bob.ry, "#5ad46a");
     }
+    // The Fog: 0.0001% per fish tier, never during a storm and never stacked
+    // on top of a fog already rolling.
+    if (lvlOf("fog") && !stormOn() && !fogOn() && Math.random() < 0.000001 * f.idx)
+      startFog();
+
     const cm = musCrate();                        // Ascended sets, multiplicative
     if (lvlOf("goldenCrate")) {
       if (Math.random() < 0.00005 * f.idx * cm)      gainItem("crate", "lucky", 4);

@@ -278,6 +278,31 @@
   }
   .phone .rushtag { right: 12px; }
 
+  /* The Fog, stacked under Redbull so all three events can be up at once. */
+  .fogtag {
+    position: absolute;
+    top: 96px;
+    right: calc(var(--panel-r) + 12px);
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: #e6ecef;
+    background: rgba(38,44,48,.78);
+    border: 2px solid #b9c6cc;
+    border-radius: 3px;
+    pointer-events: none;
+    animation: fogtag 2.8s ease-in-out infinite;
+  }
+  .fogtag svg { width: 15px; height: 15px; }
+  @keyframes fogtag {
+    0%, 100% { box-shadow: 0 0 8px rgba(200,214,220,.35), inset 0 0 6px rgba(230,240,245,.18); }
+    50%      { box-shadow: 0 0 18px rgba(200,214,220,.85), inset 0 0 11px rgba(230,240,245,.45); }
+  }
+  .phone .fogtag { right: 12px; }
+
   .rar--thunder {
     border: 3px solid #63b6ff;
     box-shadow: 0 0 11px rgba(106,168,255,.8), inset 0 0 8px rgba(150,205,255,.45);

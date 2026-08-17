@@ -38,22 +38,24 @@
     addRipple(x, y, rand(32, 60), 1.3, 12, RESON_RGB);
   }
 
-  function addFloater(text, x, y, col) {
+  // `big` marks the rare-fish pop: it never queues, never gets dropped to make
+  // room, and draws 1.4x over the top of everything else.
+  function addFloater(text, x, y, col, big) {
     // Drop the oldest one still waiting its turn, not the oldest overall. When
     // catches came in faster than the queue drained, every new pop inherited a
     // longer delay and was then shifted out before it ever showed, so nothing
     // appeared at all. Capping the delay bounds the queue as well.
     if (floaters.length > 24) {
-      const i = floaters.findIndex(fl => fl.delay > 0);
-      floaters.splice(i >= 0 ? i : 0, 1);
+      const i = floaters.findIndex(fl => fl.delay > 0 && !fl.big);
+      floaters.splice(i >= 0 ? i : floaters.findIndex(fl => !fl.big), 1);
     }
     // Several effects can fire on one catch; queue them so they rise in
     // sequence instead of printing on top of each other.
     let queued = 0;
     for (const fl of floaters) if (fl.delay > 0) queued++;
     floaters.push({
-      text, x, y, col: col || null,
-      delay: Math.min(queued, 3) * 0.18,
+      text, x, y, col: col || null, big: !!big,
+      delay: big ? 0 : Math.min(queued, 3) * 0.18,
       t: 0,
       life: 1.5,
       rise: pond.ry * 0.95 + 40,

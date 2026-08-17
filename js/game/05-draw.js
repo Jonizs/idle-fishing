@@ -413,32 +413,80 @@
     }
   }
 
+  // The fog. Drawn on the canvas rather than as a DOM veil so it covers the
+  // scene and nothing else, and so the floaters — which come after it — stay
+  // fully readable through it.
+  // Three banks at their own heights, each drifting on its own sine.
+  const FOG_BANKS = [{ y: 0.16, h: 0.30, o: 0.30, sp: 0.055, ph: 0.0 },
+                     { y: 0.50, h: 0.34, o: 0.22, sp: 0.038, ph: 2.1 },
+                     { y: 0.82, h: 0.28, o: 0.15, sp: 0.047, ph: 4.3 }];
+  // Named drawFogEvent, not drawFog: the old night fog below still owns that
+  // name, and the later declaration would win.
+  function drawFogEvent(t) {
+    const a = fogEv.a;
+    if (a <= 0.002) return;
+    const w = view.w, h = view.h;
+    ctx.save();
+    // Pale wash, heaviest at the top where the distance is. Nothing but
+    // light grey goes down: the fog only ever lightens the scene.
+    const g = ctx.createLinearGradient(0, 0, 0, h);
+    g.addColorStop(0,    "rgba(206,210,210,.34)");
+    g.addColorStop(0.38, "rgba(206,210,210,.24)");
+    g.addColorStop(0.70, "rgba(206,210,210,.14)");
+    g.addColorStop(1,    "rgba(206,210,210,.08)");
+    ctx.globalAlpha = a;
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+    // Banks: a wide radial squashed onto each band's height, so they read as
+    // rolling sheets rather than blobs.
+    const rad = w * 0.7;
+    for (const b of FOG_BANKS) {
+      const cx = w * (0.5 + 0.16 * Math.sin(t * b.sp + b.ph));
+      ctx.save();
+      ctx.translate(cx, h * b.y);
+      ctx.scale(1, (h * b.h) / rad);
+      const rg = ctx.createRadialGradient(0, 0, 0, 0, 0, rad);
+      rg.addColorStop(0, "rgba(232,234,233," + b.o.toFixed(3) + ")");
+      rg.addColorStop(1, "rgba(232,234,233,0)");
+      ctx.fillStyle = rg;
+      ctx.fillRect(-rad, -rad, rad * 2, rad * 2);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+
   function drawFloaters() {
     if (!floaters.length) return;
     const size = Math.max(13, pond.ry * 0.15);
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = "600 " + size.toFixed(1) + "px " + FONT;
     ctx.lineJoin = "round";
-    for (const fl of floaters) {
-      if (fl.delay > 0) continue;                 // still queued behind another
-      const k = fl.t / fl.life;
-      const ease = 1 - Math.pow(1 - k, 2.2);            // quick launch, slow drift
-      const y = fl.y - fl.rise * ease;
-      const x = fl.x + fl.drift * ease + Math.sin(fl.wob + k * 5) * 3;
-      const a = k < 0.12 ? k / 0.12 : 1 - Math.pow((k - 0.12) / 0.88, 1.7);
-      const pop = k < 0.14 ? 0.7 + (k / 0.14) * 0.3 : 1;
+    // Two passes: the rare-fish pops are 1.4x and go last, so they always sit
+    // on top of whatever else is in the air.
+    for (const big of [false, true]) {
+      const sz = size * (big ? 1.4 : 1);
+      ctx.font = "600 " + sz.toFixed(1) + "px " + FONT;
+      for (const fl of floaters) {
+        if (!!fl.big !== big) continue;
+        if (fl.delay > 0) continue;               // still queued behind another
+        const k = fl.t / fl.life;
+        const ease = 1 - Math.pow(1 - k, 2.2);          // quick launch, slow drift
+        const y = fl.y - fl.rise * ease;
+        const x = fl.x + fl.drift * ease + Math.sin(fl.wob + k * 5) * 3;
+        const a = k < 0.12 ? k / 0.12 : 1 - Math.pow((k - 0.12) / 0.88, 1.7);
+        const pop = k < 0.14 ? 0.7 + (k / 0.14) * 0.3 : 1;
 
-      ctx.save();
-      ctx.globalAlpha = Math.max(0, a);
-      ctx.translate(x, y);
-      ctx.scale(pop, pop);
-      ctx.lineWidth = Math.max(3, size * 0.22);
-      ctx.strokeStyle = "rgba(28,12,8,.85)";
-      ctx.strokeText(fl.text, 0, 0);
-      ctx.fillStyle = fl.col || C.ember;
-      ctx.fillText(fl.text, 0, 0);
-      ctx.restore();
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, a);
+        ctx.translate(x, y);
+        ctx.scale(pop, pop);
+        ctx.lineWidth = Math.max(3, sz * 0.22);
+        ctx.strokeStyle = "rgba(28,12,8,.85)";
+        ctx.strokeText(fl.text, 0, 0);
+        ctx.fillStyle = fl.col || C.ember;
+        ctx.fillText(fl.text, 0, 0);
+        ctx.restore();
+      }
     }
     ctx.globalAlpha = 1;
   }

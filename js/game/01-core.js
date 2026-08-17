@@ -61,7 +61,7 @@
 
 
   const lvlOf   = id => state.upgrades[id] || 0;
-  const baseTime  = f => f.time * (1 - 0.025 * lvlOf("machine") - 0.025 * dojoLvl("shoSkills")) * (1 - scrollBuff("sword"));
+  const baseTime  = f => f.time * (1 - 0.025 * lvlOf("machine") - 0.025 * dojoLvl("shoSkills") - 0.025 * dojoLvl("sanWeight")) * (1 - scrollBuff("sword"));
   const catchTime = f => baseTime(f) / speedMul();
   const focusBtn = document.getElementById("focus-btn");
   focusBtn.addEventListener("click", () => {
