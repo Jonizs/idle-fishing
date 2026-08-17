@@ -1,0 +1,27 @@
+name = "idle-fishing-api"
+main = "src/index.js"
+compatibility_date = "2026-01-01"
+
+# The API answers on its own subdomain. Pages keeps serving the game itself.
+# Uncomment once the domain's nameservers are on Cloudflare — wrangler creates
+# the DNS record itself, so there is nothing to add by hand.
+# routes = [{ pattern = "api.idle-fishing.com", custom_domain = true }]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "idle-fishing"
+# Filled in by:  npx wrangler d1 create idle-fishing
+database_id = "REPLACE_ME"
+
+[vars]
+# Origins allowed to call the API. The Pages URL, plus the domain once it is
+# pointed at the game. Anything not on this list gets no CORS headers.
+ALLOWED_ORIGINS = "https://idle-fishing.com,https://www.idle-fishing.com,https://jonizs.github.io,http://localhost:8788"
+
+# Dev login is a name and nothing else. It must be off in production or the
+# accounts are free to take.
+DEV_LOGIN = "true"
+
+# Secrets, set with `npx wrangler secret put NAME` — never in this file:
+#   TOKEN_PEPPER    random string, mixed into token hashes
+#   RESEND_API_KEY  only once magic-link email is switched on
